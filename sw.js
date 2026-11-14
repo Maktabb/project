@@ -1,5 +1,5 @@
 /* Service worker — works offline, but ALWAYS checks the network first for the app itself so updates arrive */
-const CACHE='msalem-20261110010110';
+const CACHE='msalem-20261114164041';
 const ASSETS=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png','icon-512-maskable.png','apple-touch-icon.png'];
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(CACHE).then(c=>Promise.all(ASSETS.map(a=>fetch(new Request(a,{cache:'reload'})).then(r=>r.ok&&c.put(a,r)).catch(()=>0)))).then(()=>self.skipWaiting()));

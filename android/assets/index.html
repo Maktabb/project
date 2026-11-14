@@ -1024,6 +1024,7 @@ button:active:not(:disabled){transform:scale(.96);filter:brightness(.94)}
 .mon-h span{color:inherit!important}
 .mon-h{display:flex!important;justify-content:space-between;align-items:baseline;gap:10px}.mon-h span{white-space:nowrap}.mon-h small{text-align:left;line-height:1.5}
 .arch-tab:not(.on){color:#6B7280!important;background:transparent!important}
+.arch-tab{font-size:.8rem!important;padding:10px 4px!important;white-space:nowrap!important;flex:1}.sm-tg{white-space:nowrap}
 /* approved cards + stat tiles */
 .ap-card{border:0!important;border-radius:20px!important;box-shadow:0 1px 2px rgba(0,0,0,.06),0 6px 18px rgba(0,0,0,.08)!important;overflow:hidden}
 .ap-card.open{box-shadow:0 0 0 2px rgba(27,138,126,.4),0 8px 22px rgba(0,0,0,.1)!important}
@@ -1116,6 +1117,7 @@ setTimeout(go,14000);
     <div class="arch-tabs">
       <button class="arch-tab on" id="archTabAll" onclick="archTab('all')">📂 كل العروض</button>
       <button class="arch-tab" id="archTabApp" onclick="archTab('app')">✅ العروض المعتمدة <span id="apTabCount"></span></button>
+      <button class="arch-tab" id="archTabSum" onclick="archTab('sum')">📋 ملخص العروض</button>
     </div>
     <div id="apTabAll">
     <div class="archive-toolbar">
@@ -1151,6 +1153,9 @@ setTimeout(go,14000);
     </div>
     <div id="apTabApp" style="display:none">
       <div class="ap-wrap" id="apWrap"></div>
+    </div>
+    <div id="apTabSum" style="display:none">
+      <div class="ap-wrap" id="smWrap"></div>
     </div>
   </div>
 </div>
@@ -4146,10 +4151,12 @@ function archTab(t){
   if(t==='app'&&apIsLocked()){ document.getElementById('apWrap').innerHTML=''; apAuth(()=>archTab('app')); t='all'; }
   document.getElementById('apTabAll').style.display=t==='all'?'':'none';
   document.getElementById('apTabApp').style.display=t==='app'?'':'none';
+  document.getElementById('apTabSum').style.display=t==='sum'?'':'none';
   document.getElementById('archTabAll').classList.toggle('on',t==='all');
   document.getElementById('archTabApp').classList.toggle('on',t==='app');
-  document.getElementById('archiveOverlay').classList.toggle('full',t==='app');
-  if(t==='app') renderApproved(); else renderArchiveList();
+  document.getElementById('archTabSum').classList.toggle('on',t==='sum');
+  document.getElementById('archiveOverlay').classList.toggle('full',t!=='all');
+  if(t==='app') renderApproved(); else if(t==='sum') renderSummary(); else renderArchiveList();
 }
 function openApproved(){ openArchive(); archTab('app'); }
 function apOpenStmt(id){ _apOpen[id]=true; openArchive(); archTab('app'); }
@@ -4473,6 +4480,78 @@ function apStmtHtml(r){
    +'<div class="sig"><div>المحاسب المسؤول</div><div>ختم المكتب</div></div>'+apFt()+'</div>';
   return h;
 }
+
+/* ═══════════ ملخص العروض: جدول (العميل / عرض السعر / المستندات) + فلتر بطلبات العميل ═══════════ */
+const SM_REQS=[['einvoice','🧾 فاتورة إلكترونية',s=>!!s.einvoice],['vat','📊 ضريبة قيمة مضافة',s=>!!s.vat],['social','🛡️ تأمينات اجتماعية',s=>!!s.social],
+  ['construction','🏗️ اتحاد مقاولين',s=>!!s.construction],['export','📤 بطاقة تصديرية',s=>!!s.exportCard],['import','📥 بطاقة استيرادية',s=>!!s.importCard],
+  ['trademark','™️ علامة تجارية',s=>!!s.trademark],['bank','🏦 حساب بنكي',s=>!!s.bankAccount],['einvest','🌐 صحيفة استثمار',s=>!!(s.docs&&s.docs.einvest)],
+  ['copy','📑 صورة طبق الأصل',s=>!!(s.docs&&s.docs.copy)],['funder','📄 وثيقة ممول إضافية',s=>!!(s.docs&&s.docs.funder)],['regcopy','🗂️ نسخ سجل تجاري',s=>!!(s.docs&&s.docs.regcopy)],
+  ['vip','⭐ VIP / مستعجل',s=>!!s.vip]];
+function smTags(r){ const s=r.state||{}; const t=SM_REQS.filter(x=>{ try{return x[2](s);}catch(e){return false;} }).map(x=>x[0]);
+  (s.customItems||[]).forEach(c=>{ if(c&&!c.removed&&(c.label||'').trim()&&(+c.amount||0)>=0) t.push('c:'+c.label.trim()); }); return t; }
+function smTagName(k){ const m=SM_REQS.find(x=>x[0]===k); return m?m[1]:('➕ '+k.slice(2)); }
+const _sm={q:'',st:'',tags:[],mode:'any'}; const _smCache={}; let _smBusy=false;
+function smInfo(r){ const s=r.state||{};
+  if(r.approved&&+r.approved.quoteAmount>0&&Array.isArray(s.docsList)) return {total:+r.approved.quoteAmount,docs:s.docsList};
+  if(+s.quoteTotal>0&&Array.isArray(s.docsList)) return {total:+s.quoteTotal,docs:s.docsList};
+  const c=_smCache[r.id]; if(c) return c;
+  return {total:(r.approved&&+r.approved.quoteAmount)||0,docs:Array.isArray(s.docsList)?s.docsList:null};
+}
+async function smFill(list){ /* قديم من غير أرقام محفوظة: نحسبها في الخلفية مرة واحدة */
+  if(_smBusy) return; const todo=list.filter(r=>{ const i=smInfo(r); return !(i.total>0&&i.docs)&&!_smCache[r.id]; }).slice(0,40); if(!todo.length) return;
+  _smBusy=true;
+  try{ for(const r of todo){ try{ const x=await apQuoteInfo(r); _smCache[r.id]=x; }catch(e){ _smCache[r.id]={total:0,docs:[]}; }
+    const w=document.getElementById('apTabSum'); if(!w||w.style.display==='none') break; renderSummary(true); } }finally{ _smBusy=false; }
+}
+function smToggleTag(k){ const i=_sm.tags.indexOf(k); if(i>=0) _sm.tags.splice(i,1); else _sm.tags.push(k); renderSummary(); }
+function smSet(k,v){ _sm[k]=v; renderSummary(); }
+function smFiltered(){
+  const q=_sm.q.trim().toLowerCase();
+  return loadArchive().filter(r=>r&&r.state).filter(r=>{
+    if(_sm.st==='app'&&!r.approved) return false; if(_sm.st==='pend'&&r.approved) return false;
+    if(q&&!((apName(r)+' '+(r.state.clientName||'')+' '+(r.state.clientPhone||'')).toLowerCase().includes(q))) return false;
+    if(_sm.tags.length){ const t=smTags(r); const ok=_sm.mode==='all'?_sm.tags.every(x=>t.includes(x)):_sm.tags.some(x=>t.includes(x)); if(!ok) return false; }
+    return true; }).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
+}
+function renderSummary(keepFocus){
+  const wrap=document.getElementById('smWrap'); if(!wrap) return;
+  const all=loadArchive().filter(r=>r&&r.state), list=smFiltered();
+  const cnt={}; all.forEach(r=>smTags(r).forEach(k=>cnt[k]=(cnt[k]||0)+1));
+  const keys=SM_REQS.map(x=>x[0]).filter(k=>cnt[k]).concat(Object.keys(cnt).filter(k=>k.startsWith('c:')).sort());
+  const hadFocus=document.activeElement&&document.activeElement.id==='smSearch';
+  let tot=0; const rows=list.map((r,i)=>{ const inf=smInfo(r); tot+=inf.total||0; const s=r.state;
+    const docs=inf.docs; const apv=!!r.approved;
+    const dh=docs===null?'<span class="sm-mut">⏳ جاري الحساب…</span>':(docs.length?('<details class="sm-det"><summary>'+docs.length+' مستند — '+escapeHtml(docs[0])+(docs.length>1?' …':'')+'</summary><ol>'+docs.map(d=>'<li>'+escapeHtml(d)+'</li>').join('')+'</ol></details>'):'<span class="sm-mut">—</span>');
+    const tg=smTags(r).slice(0,6).map(k=>'<span class="sm-tg">'+escapeHtml(smTagName(k))+'</span>').join('');
+    return '<tr><td class="c">'+(i+1)+'</td><td><b>'+escapeHtml(s.clientName||'—')+'</b><div class="sm-mut">'+escapeHtml(apName(r))+(s.clientPhone?(' • <span dir="ltr">'+escapeHtml(s.clientPhone)+'</span>'):'')+'</div><div class="sm-tgs">'+tg+'</div></td>'
+      +'<td class="n"><b>'+(inf.total>0?apFmt(inf.total)+' ج':'—')+'</b><div><span class="ap-chip '+(apv?'ok':'na')+'">'+(apv?'معتمد':'عرض')+'</span></div></td><td class="dc">'+dh+'</td>'
+      +'<td><button class="archive-act" title="فتح العرض" onclick="loadFromArchive(\''+r.id+'\')">✏️</button></td></tr>'; }).join('');
+  let h='<style>.sm-mut{color:#6B7280;font-size:.72rem;font-weight:600}.sm-tgs{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}.sm-tg{font-size:.64rem;font-weight:700;background:rgba(27,138,126,.12);color:#0F5F57;border-radius:999px;padding:2px 8px}.sm-chip{border:0;border-radius:999px;padding:7px 12px;font-family:inherit;font-weight:800;font-size:.76rem;background:rgba(120,120,128,.14);color:#0B1F3A;cursor:pointer}.sm-chip.on{background:linear-gradient(160deg,#34D07A,#16A34A);color:#fff}.sm-chip small{opacity:.7;margin-right:4px}.sm-t{width:100%;border-collapse:separate;border-spacing:0;font-size:.82rem}.sm-t th{position:sticky;top:0;background:#0B1F3A;color:#E9C766;padding:9px 8px;text-align:right;font-size:.75rem;z-index:1}.sm-t th:first-child{border-radius:0 12px 0 0}.sm-t th:last-child{border-radius:12px 0 0 0}.sm-t td{padding:10px 8px;border-bottom:1px solid #EEF0F4;vertical-align:top;background:#fff}.sm-t td.c{width:26px;color:#6B7280;text-align:center}.sm-t td.n{white-space:nowrap;text-align:center}.sm-t td.dc{min-width:190px}.sm-det summary{cursor:pointer;font-weight:700;font-size:.76rem}.sm-det ol{margin:6px 18px 0;padding:0;font-size:.74rem;line-height:1.7}.sm-t tfoot td{background:#F5F6F9;font-weight:900}</style>';
+  h+='<div class="ap-tools"><input type="text" class="archive-search" id="smSearch" placeholder="🔍 بحث باسم العميل أو الشركة أو التليفون..." value="'+escapeHtml(_sm.q)+'" oninput="_sm.q=this.value;renderSummary(true)"></div>';
+  h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0">'+[['','الكل'],['app','✅ معتمد'],['pend','📝 لسه عرض']].map(x=>'<button class="sm-chip'+(_sm.st===x[0]?' on':'')+'" onclick="smSet(\'st\',\''+x[0]+'\')">'+x[1]+'</button>').join('')+'</div>';
+  h+='<div style="font-weight:900;font-size:.8rem;margin:10px 0 6px">🎯 فلتر بطلبات العميل'+(_sm.tags.length?' <button class="sm-chip" style="padding:4px 10px" onclick="_sm.tags=[];renderSummary()">مسح ✕</button>':'')+'</div>';
+  h+=keys.length?('<div style="display:flex;gap:6px;flex-wrap:wrap">'+keys.map(k=>'<button class="sm-chip'+(_sm.tags.includes(k)?' on':'')+'" onclick="smToggleTag(\''+k.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">'+escapeHtml(smTagName(k))+'<small>'+cnt[k]+'</small></button>').join('')+'</div>'):'<div class="sm-mut">مفيش طلبات إضافية متسجلة في العروض لسه.</div>';
+  if(_sm.tags.length>1) h+='<div style="display:flex;gap:6px;margin-top:8px;align-items:center"><span class="sm-mut">التطابق:</span><button class="sm-chip'+(_sm.mode==='any'?' on':'')+'" onclick="smSet(\'mode\',\'any\')">أي طلب منهم</button><button class="sm-chip'+(_sm.mode==='all'?' on':'')+'" onclick="smSet(\'mode\',\'all\')">كل الطلبات</button></div>';
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 6px;gap:8px"><b style="font-size:.84rem">'+list.length+' عرض'+(all.length!==list.length?(' من '+all.length):'')+' • إجمالي '+apFmt(tot)+' ج</b><button class="archive-tbtn" onclick="smPdf(this)">📄 PDF</button></div>';
+  h+=list.length?('<div style="overflow-x:auto;border-radius:14px"><table class="sm-t"><thead><tr><th>م</th><th>العميل</th><th>عرض السعر</th><th>المستندات اللي هيستلمها</th><th></th></tr></thead><tbody>'+rows+'</tbody><tfoot><tr><td colspan="2">الإجمالي ('+list.length+')</td><td class="n">'+apFmt(tot)+' ج</td><td colspan="2"></td></tr></tfoot></table></div>'):'<div class="archive-empty">'+(all.length?'مفيش عروض مطابقة للفلتر.':'لسه مفيش عروض.')+'</div>';
+  wrap.innerHTML=h;
+  if(hadFocus||keepFocus){ const e=document.getElementById('smSearch'); if(e&&hadFocus){ e.focus(); e.setSelectionRange(e.value.length,e.value.length); } }
+  smFill(list);
+}
+function smHtml(){
+  const list=smFiltered(); let tot=0;
+  const rows=list.map((r,i)=>{ const inf=smInfo(r); tot+=inf.total||0; return '<tr><td>'+(i+1)+'</td><td><b>'+escapeHtml(r.state.clientName||'—')+'</b><br>'+escapeHtml(apName(r))+'</td><td class="n">'+(inf.total>0?apFmt(inf.total):'—')+'</td><td>'+((inf.docs||[]).map(d=>'• '+escapeHtml(d)).join('<br>')||'—')+'</td></tr>'; }).join('');
+  const ft=_sm.tags.length?('<div style="font-size:.8rem;margin:6px 0">الفلتر: '+_sm.tags.map(k=>escapeHtml(smTagName(k))).join(_sm.mode==='all'?' + ':' / ')+'</div>'):'';
+  return AP_PR_STYLE+'<div class="apr">'+apHdr('ملخص عروض الأسعار — '+apDate(apToday()))+ft+'<table><thead><tr><th>م</th><th>العميل / الشركة</th><th>عرض السعر (ج)</th><th>المستندات التي سيستلمها</th></tr></thead><tbody>'+rows+'</tbody><tfoot><tr><td colspan="2">الإجمالي ('+list.length+' عرض)</td><td class="n">'+apFmt(tot)+'</td><td></td></tr></tfoot></table>'+apFt()+'</div>';
+}
+async function smPdf(btn){
+  const orig=btn.textContent; btn.textContent='⏳'; btn.disabled=true;
+  try{ const blob=await apHtmlToPdf(smHtml()); const fname='ملخص العروض.pdf';
+    _downloadBlob(blob,fname); }
+  catch(e){ alert('تعذّر إنشاء الـ PDF: '+(e&&e.message||e)); }
+  finally{ btn.textContent=orig; btn.disabled=false; }
+}
+
 /* ── الخزائن: رصيد كل خزينة وحركتها (للمالك فقط) ── */
 function apTreasData(){
   const T={}; AP_TREAS.forEach(t=>T[t[0]]={k:t[0],name:t[1],inn:0,out:0,rows:[]});
