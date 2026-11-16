@@ -584,6 +584,24 @@ body{font-family:'Cairo',sans-serif;background:var(--gray-bg);color:var(--navy);
 .chk-row input{width:15px!important;height:15px!important;accent-color:var(--gold);cursor:pointer;flex-shrink:0}
 .perm-block{margin-top:8px;padding:9px 10px;background:rgba(var(--fg),.03);border:1px dashed rgba(var(--fg),.1);border-radius:7px;display:none}
 .perm-block.show{display:block}
+.prm-head{display:flex;justify-content:space-between;align-items:center;margin:2px 0 8px;font-size:.78rem;font-weight:800;color:var(--gold-light)}
+.prm-head button{border:0;background:rgba(var(--fg),.1);color:rgba(var(--fg),.85);border-radius:9px;padding:4px 9px;margin-right:5px;font-family:inherit;font-size:.68rem;font-weight:800;cursor:pointer}
+.prm-list{display:flex;flex-direction:column;gap:6px}
+.prm{display:grid!important;grid-template-columns:1fr auto;align-items:start;gap:6px;background:rgba(var(--fg),.05);border-radius:12px;padding:9px 10px;margin:0!important}
+.prm-main{display:flex!important;flex-direction:row;gap:10px;align-items:flex-start;cursor:pointer;font-size:.78rem;line-height:1.7;color:rgba(var(--fg),.9);margin:0!important}
+.prm-txt{flex:1;min-width:0}
+.prm-main input{position:absolute;opacity:0;width:0;height:0}
+.prm-tick{flex:0 0 22px;width:22px;height:22px;box-sizing:border-box;border-radius:50%;border:2px solid rgba(var(--fg),.35);display:inline-flex;align-items:center;justify-content:center;transition:all .15s;margin-top:1px}
+.prm-main input:checked+.prm-tick{background:#30D158;border-color:#30D158}
+.prm-main input:checked+.prm-tick::after{content:'✓';color:#fff;font-size:.8rem;font-weight:900}
+.prm-main input:focus-visible+.prm-tick{box-shadow:0 0 0 3px rgba(10,132,255,.45)}
+.prm-c{color:var(--gold-light)}
+.prm-mv{display:flex;flex-direction:column;gap:4px}
+.prm-mv button{border:0;background:rgba(var(--fg),.1);color:rgba(var(--fg),.85);border-radius:8px;width:28px;height:24px;font-size:.62rem;cursor:pointer;padding:0}
+.prm-mv button:disabled{opacity:.25;cursor:default}
+.prm-mode{grid-column:1/-1;margin-right:31px;font-size:.71rem;color:rgba(var(--fg),.6)}
+.prm-mode label{margin-left:12px;cursor:pointer}
+.prm-add{width:100%;margin-top:8px;border:1.5px dashed rgba(201,168,76,.55);background:transparent;color:var(--gold-light);border-radius:12px;padding:9px;font-family:inherit;font-weight:800;font-size:.78rem;cursor:pointer}
 .perm-row{display:flex;gap:6px;align-items:flex-start;margin-bottom:6px;font-size:.73rem;color:rgba(var(--fg),.7);line-height:1.4}
 .perm-row:last-child{margin-bottom:0}
 .perm-row input{width:14px!important;height:14px!important;accent-color:var(--gold);cursor:pointer;flex-shrink:0;margin-top:2px}
@@ -868,6 +886,9 @@ html[data-mode=dark] .arch-set>summary{color:#e5e7eb}
    PRINT
 ══════════════════════════════════════ */
 @media print{
+  html,body,.screen-wrap,.main-pane,.preview-wrap,#quotePaper{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;position:static!important}
+  .m-nav,#updToast,.archive-overlay,.ap-dlg-ov,#appSplash,#prBusy{display:none!important}
+  #quotePaper tr,#quotePaper p{break-inside:avoid;page-break-inside:avoid}
   body{background:white}
   .sidebar,.hint,.action-btns{display:none!important}
   .main-pane{padding:0;display:block}
@@ -967,8 +988,8 @@ html[data-mode=dark] .ap-sc.bal{background:rgba(185,28,28,.2)}
 html[data-mode=dark] .ap-dlg{background:var(--md);color:#e5e7eb}
 html[data-mode=dark] .ap-dlg input,html[data-mode=dark] .ap-dlg select,html[data-mode=dark] .ap-dlg textarea,html[data-mode=dark] .ap-dlg .row button{background:var(--navy2);color:#e5e7eb;border-color:var(--gray-border)}
 html[data-mode=dark] .ap-dlg .row button.ok{background:#16A34A}
-@media screen and (max-width:900px){.ap-wrap{padding:12px 14px 20px}.ap-sum{grid-template-columns:1fr 1fr 1fr}.ap-sc b{font-size:.85rem}.arch-tabs{padding:0 8px}.ap-tbl{font-size:.64rem}.ap-tbl th,.ap-tbl td{padding:5px 3px}.ap-tbl td.n{white-space:normal}.ap-mini{padding:0 1px;font-size:.78rem}.ap-body{padding:0 8px 12px}}
-@media screen and (max-width:900px){
+@media screen and (max-width:1100px),screen and (hover:none) and (pointer:coarse){.ap-wrap{padding:12px 14px 20px}.ap-sum{grid-template-columns:1fr 1fr 1fr}.ap-sc b{font-size:.85rem}.arch-tabs{padding:0 8px}.ap-tbl{font-size:.64rem}.ap-tbl th,.ap-tbl td{padding:5px 3px}.ap-tbl td.n{white-space:normal}.ap-mini{padding:0 1px;font-size:.78rem}.ap-body{padding:0 8px 12px}}
+@media screen and (max-width:1100px),screen and (hover:none) and (pointer:coarse){
   .screen-wrap{display:block}
   .sidebar{width:100%;min-width:0;position:static;height:auto;overflow:visible;padding:18px 14px 100px}
   .main-pane{padding:10px 6px 100px;display:block}
@@ -1055,7 +1076,47 @@ button:active:not(:disabled){transform:scale(.96);filter:brightness(.94)}
 /* update toast */
 #updToast{position:fixed;left:12px;right:12px;bottom:max(14px,env(safe-area-inset-bottom));z-index:5000;display:none;align-items:center;gap:10px;background:rgba(28,28,30,.92);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);color:#fff;border-radius:18px;padding:12px 14px;box-shadow:0 12px 40px rgba(0,0,0,.4);font-weight:800;font-size:.86rem;animation:iosPop .3s var(--ios-ease)}
 #updToast.show{display:flex}#updToast span{flex:1}#updToast button{border:0;border-radius:12px;background:#0A84FF;color:#fff;font-family:inherit;font-weight:800;padding:9px 16px;font-size:.84rem}
+@media screen and (max-width:1100px),screen and (hover:none) and (pointer:coarse){html,body{height:auto!important;overflow-y:auto!important}.screen-wrap{min-height:0!important}.sidebar{position:static!important;height:auto!important;overflow:visible!important}}
+/* full-screen archive tabs: header stays put, the CONTENT scrolls (works with iOS dynamic toolbar) */
+.archive-overlay.full{overflow:hidden!important;padding:0!important}
+.archive-overlay.full .archive-modal{height:100vh!important;height:100dvh!important;min-height:0!important;max-height:none!important}
+.archive-overlay.full #apTabApp,.archive-overlay.full #apTabSum{flex:1 1 auto;min-height:0;flex-direction:column}
+.archive-overlay.full #apTabApp:not([style*="none"]),.archive-overlay.full #apTabSum:not([style*="none"]){display:flex}
+.archive-overlay.full .ap-wrap{flex:1 1 auto!important;min-height:0!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-bottom:calc(40px + env(safe-area-inset-bottom))!important}
+.archive-overlay.full .archive-head{padding:12px 16px!important}
+.archive-overlay.full .arch-tabs{margin:6px 12px 2px!important}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<style id="iosInput">
+/* ===== iOS-style input screen: SF font, grouped cards, colored icon tiles, switches ===== */
+body,.sidebar,.sidebar input,.sidebar select,.sidebar textarea,.sidebar button,.m-nav button,.archive-modal,.ap-dlg{font-family:-apple-system,BlinkMacSystemFont,"SF Arabic","SF Pro Text","SF Pro Display",'Cairo',sans-serif!important}
+#quotePaper,#quotePaper *{font-family:'Cairo',sans-serif}
+.sidebar-logo{font-size:1.35rem!important;font-weight:800!important;letter-spacing:-.01em}
+.sidebar-sub{font-size:.78rem!important}
+.ios-group{background:rgba(255,255,255,.055);border-radius:16px;padding:12px 12px 6px;margin:0 0 14px;border:.5px solid rgba(255,255,255,.07)}
+.sec-lbl.ios-h{display:flex!important;align-items:center;gap:10px;color:rgba(var(--fg),.95)!important;font-size:.95rem!important;font-weight:800!important;letter-spacing:0!important;margin:20px 2px 8px!important;padding:0!important;opacity:1!important}
+.ios-ico{flex:0 0 30px;width:30px;height:30px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 2px 6px rgba(0,0,0,.25)}
+.sidebar .field label{font-size:.76rem!important;font-weight:600!important;color:rgba(var(--fg),.62)!important;margin:0 4px 5px!important}
+.sidebar input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]),.sidebar select,.sidebar textarea{border-color:transparent!important;border-radius:11px!important;font-size:.95rem!important;min-height:44px}
+.sidebar select{-webkit-appearance:none;appearance:none;background-image:linear-gradient(45deg,transparent 50%,#8E8E93 50%),linear-gradient(135deg,#8E8E93 50%,transparent 50%)!important;background-position:16px 50%,22px 50%!important;background-size:6px 6px!important;background-repeat:no-repeat!important;padding-left:34px!important}
+/* checkbox cards → iOS rows with a switch */
+.chk-card label,.radio-item label{border:0!important;border-radius:12px!important;background:rgba(255,255,255,.06)!important;padding:13px 66px 13px 12px!important;min-height:48px;display:flex!important;align-items:center;justify-content:space-between;gap:8px;font-weight:600!important;font-size:.86rem!important;line-height:1.5}
+.chk-card label span{float:none!important;order:2;white-space:nowrap;font-weight:700}
+.chk-card input:checked+label,.radio-item input:checked+label{background:rgba(48,209,88,.13)!important;box-shadow:inset 0 0 0 1px rgba(48,209,88,.45)}
+.chk-card input,.chk-row input[type=checkbox]{-webkit-appearance:none;appearance:none;width:46px!important;height:28px!important;border-radius:14px;background:rgba(120,120,128,.36);position:absolute;top:50%!important;right:10px!important;transform:translateY(-50%);margin:0;cursor:pointer;transition:background .2s;z-index:1}
+.chk-card input::before,.chk-row input[type=checkbox]::before{content:'';position:absolute;top:2px;right:2px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.3);transition:transform .2s cubic-bezier(.2,.8,.2,1)}
+.chk-card input:checked,.chk-row input[type=checkbox]:checked{background:#30D158}
+.chk-card input:checked::before,.chk-row input[type=checkbox]:checked::before{transform:translateX(-18px)}
+.chk-card input:disabled{opacity:.4}
+.chk-row{position:relative;background:rgba(255,255,255,.06);border-radius:12px;padding:12px 66px 12px 12px;min-height:46px;margin-top:6px!important;font-weight:600!important;font-size:.84rem!important}
+.radio-item input{-webkit-appearance:none;appearance:none;width:24px!important;height:24px!important;border-radius:50%;border:2px solid rgba(var(--fg),.35);right:14px!important;background:transparent;z-index:1}
+.radio-item input:checked{border-color:#30D158;background:#30D158 radial-gradient(circle,#fff 30%,transparent 33%)}
+.radio-item label{padding-right:50px!important}
+.sec-toggle{border:0!important;border-radius:14px!important;background:rgba(255,255,255,.07)!important;padding:14px!important;color:rgba(var(--fg),.92)!important;font-weight:700!important}
+.sec-toggle .caret{color:#8E8E93}
+.add-partner-btn{border:0!important;background:rgba(10,132,255,.16)!important;color:#64B5FF!important;font-weight:800!important;padding:12px!important}
+.partner-block{background:rgba(255,255,255,.05)!important;border:.5px solid rgba(255,255,255,.1)!important;padding:14px!important}
+.partner-title{font-weight:800!important;font-size:.92rem!important}
 </style>
 </head>
 <body>
@@ -1493,6 +1554,12 @@ setTimeout(go,14000);
         </div>
       </div>
 
+      <!-- اشتراطات التأسيس -->
+      <div id="qCondSection" style="display:none">
+        <div class="q-sec">اشتراطات التأسيس</div>
+        <div class="q-body"><ul id="qCondList" style="margin:0;padding-right:20px;line-height:2;font-size:.86rem"></ul></div>
+      </div>
+
       <!-- 7. العرض المالي -->
       <div id="qFinSection">
       <div class="q-sec">العرض المالي</div>
@@ -1622,6 +1689,30 @@ const PERMS=[
 // Effective permission list = the 7 standard permissions + any custom ones the office typed.
 // Every director's perms[] array and permsSharedMode[] are indexed against THIS list.
 function EFFPERMS(){ return PERMS.concat(S.customPerms); }
+const PERM_PR_IDX=PERMS.indexOf('مدير علاقات عامة بالشركة'); // not auto-selected — add it only when asked
+/* display + contract order of the permissions (indices into EFFPERMS) — rearranged with ▲▼ */
+function permSeq(){ const n=EFFPERMS().length; let o=(S.permOrder||[]).filter(i=>Number.isInteger(i)&&i>=0&&i<n); o=[...new Set(o)]; for(let i=0;i<n;i++) if(!o.includes(i)) o.push(i); S.permOrder=o; return o; }
+function movePerm(pi,dir){ const o=permSeq(); const k=o.indexOf(pi), j=k+dir; if(k<0||j<0||j>=o.length) return; const t=o[k]; o[k]=o[j]; o[j]=t; S.permOrder=o; renderAllCustomPermRows(); recalc(); }
+function permRowHtml(pIdx,pi){
+  const t=EFFPERMS()[pi], isC=pi>=PERMS.length, on=!!(S.partners[pIdx]&&S.partners[pIdx].perms[pi]);
+  const seq=permSeq(), k=seq.indexOf(pi);
+  return `<div class="perm-row prm" data-pi="${pi}">
+    <label class="prm-main"><input type="checkbox" id="pp_${pIdx}_${pi}" ${on?'checked':''} onchange="S.partners[${pIdx}].perms[${pi}]=this.checked;onPermChange(${pIdx},${pi});recalc()"><span class="prm-tick"></span><span class="prm-txt${isC?' prm-c':''}">${escapeHtml(t)}</span></label>
+    <span class="prm-mv"><button type="button" title="لفوق" ${k<=0?'disabled':''} onclick="movePerm(${pi},-1)">▲</button><button type="button" title="لتحت" ${k>=seq.length-1?'disabled':''} onclick="movePerm(${pi},1)">▼</button>${isC?`<button type="button" title="حذف الصلاحية" onclick="deleteCustomPerm(${pi-PERMS.length})">🗑️</button>`:''}</span>
+    <div id="permmode_${pIdx}_${pi}" class="prm-mode" style="display:none">
+      <label><input type="radio" id="pmj_${pIdx}_${pi}" name="pm_${pIdx}_${pi}" value="joint" onchange="setSharedPermMode(${pi},'joint')"> مجتمعين</label>
+      <label><input type="radio" id="pms_${pIdx}_${pi}" name="pm_${pIdx}_${pi}" value="solo" onchange="setSharedPermMode(${pi},'solo')"> منفردين</label>
+    </div></div>`;
+}
+function permAll(pIdx,v){ const p=S.partners[pIdx]; if(!p) return; p.perms=EFFPERMS().map((_,pi)=>v&&pi!==PERM_PR_IDX?true:(v?!!p.perms[pi]&&pi===PERM_PR_IDX:false)); renderCustomPermRows(pIdx); recalc(); }
+function addCustomPermFor(pIdx){
+  apDialog('➕ صلاحية مخصصة',[{id:'t',label:'نص الصلاحية',value:'',ph:'مثال: حق التعامل مع مصلحة الجمارك'},{type:'info',id:'i',html:'هتتضاف للقائمة عند كل المديرين، ومتعلّمة للمدير ده.'}],'إضافة',v=>{
+    const t=(v.t||'').trim(); if(!t){ alert('اكتبي نص الصلاحية.'); return false; }
+    _pushCustomPerm(t); const pi=EFFPERMS().length-1; if(S.partners[pIdx]) S.partners[pIdx].perms[pi]=true;
+    renderCustomPermList(); renderAllCustomPermRows(); recalc();
+  });
+}
+function _pushCustomPerm(txt){ S.customPerms.push(txt); S.partners.forEach(p=>{ p.perms.push(false); }); S.permsSharedMode.push(null); }
 const VOS_LABELS = {};
 VOS.forEach(v=>{ VOS_LABELS[v.key]=v.label; });
 
@@ -1862,23 +1953,14 @@ function addPartner(solo=false, external=false){
       <input type="checkbox" id="pfem_${pIdx}" onchange="S.partners[${pIdx}].isFemale=this.checked;recalc()">
       أنثى (السيدة / ... بدل السيد / ...)
     </label>
+    <label class="chk-row" id="forLabel_${pIdx}">
+      <input type="checkbox" id="pfor_${pIdx}" onchange="S.partners[${pIdx}].isForeign=this.checked;recalc()">
+      🌍 أجنبي الجنسية
+    </label>
     <div class="perm-block ${external?'show':''}" id="permBlock_${pIdx}">
-      ${PERMS.map((p,pi)=>`
-        <div class="perm-row" style="flex-direction:column;align-items:flex-start;margin-bottom:8px">
-          <div style="display:flex;gap:6px;align-items:flex-start">
-            <input type="checkbox" id="pp_${pIdx}_${pi}" onchange="S.partners[${pIdx}].perms[${pi}]=this.checked;onPermChange(${pIdx},${pi});recalc()" style="width:14px;height:14px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;margin-top:2px">
-            <span>${p}</span>
-          </div>
-          <div id="permmode_${pIdx}_${pi}" style="display:none;margin-top:5px;margin-right:20px">
-            <label style="font-size:.71rem;color:rgba(var(--fg),.5);margin-left:8px;cursor:pointer">
-              <input type="radio" id="pmj_${pIdx}_${pi}" name="pm_${pIdx}_${pi}" value="joint" onchange="setSharedPermMode(${pi},'joint')" style="accent-color:var(--gold)"> مجتمعين
-            </label>
-            <label style="font-size:.71rem;color:rgba(var(--fg),.5);cursor:pointer">
-              <input type="radio" id="pms_${pIdx}_${pi}" name="pm_${pIdx}_${pi}" value="solo" onchange="setSharedPermMode(${pi},'solo')" style="accent-color:var(--gold)"> منفردين
-            </label>
-          </div>
-        </div>`).join('')}
-      <div id="customPermsHost_${pIdx}"></div>
+      <div class="prm-head"><span>✅ الصلاحيات</span><span><button type="button" onclick="permAll(${pIdx},true)">تحديد الكل</button><button type="button" onclick="permAll(${pIdx},false)">إلغاء الكل</button></span></div>
+      <div id="customPermsHost_${pIdx}" class="prm-list"></div>
+      <button type="button" class="prm-add" onclick="addCustomPermFor(${pIdx})">➕ صلاحية مخصصة</button>
     </div>
   `;
   document.getElementById('partnersContainer').appendChild(div);
@@ -1887,14 +1969,10 @@ function addPartner(solo=false, external=false){
   if(solo){
     S.partners[pIdx].share=S.capitalValue||0;
     S.partners[pIdx].isDirector=true;
-    S.partners[pIdx].perms=Array(EFFPERMS().length).fill(true);
+    S.partners[pIdx].perms=EFFPERMS().map((_,pi)=>pi!==PERM_PR_IDX);
     setTimeout(()=>{
       const dirCb=document.getElementById('pdir_'+pIdx);
       if(dirCb){dirCb.checked=true;document.getElementById('permBlock_'+pIdx).classList.add('show');}
-      PERMS.forEach((_,pi)=>{
-        const c=document.getElementById('pp_'+pIdx+'_'+pi);
-        if(c)c.checked=true;
-      });
       renderCustomPermRows(pIdx); // reflect the now-true custom perm checkboxes
       updateSoloValue(pIdx);
     },10);
@@ -1965,26 +2043,8 @@ function renderCustomPermList(){
 function renderCustomPermRows(pIdx){
   const host=document.getElementById('customPermsHost_'+pIdx);
   if(!host)return;
-  const base=PERMS.length;
-  host.innerHTML=S.customPerms.map((t,ci)=>{
-    const pi=base+ci;
-    const checked=!!(S.partners[pIdx]&&S.partners[pIdx].perms[pi]);
-    return `
-      <div class="perm-row" style="flex-direction:column;align-items:flex-start;margin-bottom:8px">
-        <div style="display:flex;gap:6px;align-items:flex-start">
-          <input type="checkbox" id="pp_${pIdx}_${pi}" ${checked?'checked':''} onchange="S.partners[${pIdx}].perms[${pi}]=this.checked;onPermChange(${pIdx},${pi});recalc()" style="width:14px;height:14px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;margin-top:2px">
-          <span style="color:var(--gold-light)">${escapeHtml(t)}</span>
-        </div>
-        <div id="permmode_${pIdx}_${pi}" style="display:none;margin-top:5px;margin-right:20px">
-          <label style="font-size:.71rem;color:rgba(var(--fg),.5);margin-left:8px;cursor:pointer">
-            <input type="radio" id="pmj_${pIdx}_${pi}" name="pm_${pIdx}_${pi}" value="joint" onchange="setSharedPermMode(${pi},'joint')" style="accent-color:var(--gold)"> مجتمعين
-          </label>
-          <label style="font-size:.71rem;color:rgba(var(--fg),.5);cursor:pointer">
-            <input type="radio" id="pms_${pIdx}_${pi}" name="pm_${pIdx}_${pi}" value="solo" onchange="setSharedPermMode(${pi},'solo')" style="accent-color:var(--gold)"> منفردين
-          </label>
-        </div>
-      </div>`;
-  }).join('');
+  host.innerHTML=permSeq().map(pi=>permRowHtml(pIdx,pi)).join('');
+  try{ syncPermModeUI(); }catch(e){}
 }
 
 // Re-render custom rows for every partner (used after add/delete so indices stay aligned).
@@ -1997,10 +2057,7 @@ function addCustomPerm(){
   if(!inp)return;
   const txt=(inp.value||'').trim();
   if(!txt){ inp.focus(); return; }
-  S.customPerms.push(txt);
-  // Grow every partner's perms slot + the shared-mode slot to keep indices aligned.
-  S.partners.forEach(p=>{ p.perms.push(false); });
-  S.permsSharedMode.push(null);
+  _pushCustomPerm(txt);
   inp.value='';
   renderCustomPermList();
   renderAllCustomPermRows();
@@ -2009,7 +2066,8 @@ function addCustomPerm(){
 
 function deleteCustomPerm(ci){
   const pi=PERMS.length+ci; // combined index of this custom permission
-  S.customPerms.splice(ci,1);
+  const ord=permSeq().filter(i=>i!==pi).map(i=>i>pi?i-1:i);
+  S.customPerms.splice(ci,1); S.permOrder=ord;
   S.partners.forEach(p=>{ if(p.perms.length>pi) p.perms.splice(pi,1); });
   if(S.permsSharedMode.length>pi) S.permsSharedMode.splice(pi,1);
   renderCustomPermList();
@@ -2636,7 +2694,7 @@ function recalc(){
       const dirN=f?'المديرة':'المدير', dirNL=f?'للمديرة':'للمدير', founderN=f?'مؤسستها':'مؤسسها';
       html+=`<p style="margin-bottom:10px">${beV} ${dirNL} ${soleAdj}، كافة السلطات المقررة لإدارة الشركة والتعامل باسمها، وذلك فيما عدا ما احتُفظ به لمؤسس الشركة في هذا النظام أو قانون الشركات أو لائحته التنفيذية. و${repV} ${dirN} الشركة أمام القضاء والغير، و${beV} ${dirN} ${respAdj} عن إدارتها أمام ${founderN}.</p>`;
       const pron=f?'لها':'له';
-      const checkedPerms=EFFPERMS().filter((_,pi)=>d.perms[pi]).map(p=>withPronoun(p,pron));
+      const checkedPerms=permSeq().filter(pi=>d.perms[pi]).map(pi=>withPronoun(EFFPERMS()[pi],pron));
       if(checkedPerms.length>0){
         html+=`<p style="margin-bottom:8px"><strong>و${labelFor(d.name||'—')} منفرداً:</strong> `;
         html+=checkedPerms.join(' ، ');
@@ -2661,7 +2719,7 @@ function recalc(){
         const soloGroups={};  // key: sorted names joined — {names:[], perms:[]}
         const jointGroups={}; // key: sorted names joined — {names:[], perms:[]}
 
-        EFFPERMS().forEach((perm,pi)=>{
+        permSeq().forEach(pi=>{ const perm=EFFPERMS()[pi];
           const checkedDirs=directors.filter(d=>d.perms[pi]);
           if(checkedDirs.length===0)return;
 
@@ -2712,7 +2770,7 @@ function recalc(){
       } else {
         const d=directors[0];
         const pron=pronounForNames([d.name||'—']);
-        const checkedPerms=EFFPERMS().filter((_,pi)=>d.perms[pi]).map(p=>withPronoun(p,pron));
+        const checkedPerms=permSeq().filter(pi=>d.perms[pi]).map(pi=>withPronoun(EFFPERMS()[pi],pron));
         if(checkedPerms.length>0){
           html+=`<p style="margin-bottom:8px"><strong>و${labelFor(d.name||'—')} منفرداً:</strong> `;
           html+=checkedPerms.join(' ، ');
@@ -2833,6 +2891,14 @@ function recalc(){
   } else {
     clientDocsSection.style.display='none';
   }
+  // Founding conditions: one-person company / foreign partners
+  { const conds=[];
+    if(S.partners.length===1) conds.push('شركة الشخص الواحد: إيداع بنكي لكامل رأس المال قبل تأسيس الشركة.');
+    const fx=S.partners.filter(p=>p.isForeign);
+    if(fx.length){ const nm=fx.map(p=>(p.name||'').trim()).filter(Boolean);
+      conds.push('اشتراطات تأسيس للأجانب'+(nm.length?(' ('+nm.join('، ')+')'):'')+': وجود إقامة سارية في البلاد وعمل توكيل بموجب هذه الإقامة، أو عمل توكيل من السفارة المصرية في الدولة التي يقيم بها.'); }
+    const cs=document.getElementById('qCondSection'), cl=document.getElementById('qCondList');
+    if(cs&&cl){ cs.style.display=conds.length?'block':'none'; cl.innerHTML=conds.map(c=>'<li>'+escapeHtml(c)+'</li>').join(''); } }
 
   // Financial
   const finBody=document.getElementById('qFinBody');
@@ -2934,6 +3000,7 @@ function recalc(){
    ACTION FUNCTIONS
 ══════════════════════════════════════ */
 function doPrint(){
+  if((window.AndroidBridge&&AndroidBridge.printPdf)||(_isIOS()&&_isStandalone())){ const p=_paperOrAlert(); if(!p) return; _printViaPdf('مشروع تأسيس - '+(S.nameAr||S.nameEn||''), p.cloneNode(true)); return; }
   if(window.AndroidBridge){ const p=_paperOrAlert(); if(!p) return; _openPrintWindow('مشروع تأسيس - '+(S.nameAr||S.nameEn||''), p.outerHTML); return; }
   window.print();
 }
@@ -3094,6 +3161,12 @@ function buildWordHTML(){
     </table>`;
   }
 
+  // Founding conditions (one-person company / foreigners)
+  const condItems=[...paper.querySelectorAll('#qCondList li')].map(li=>C(li.innerText)).filter(Boolean);
+  if(condItems.length){
+    b+=sec('اشتراطات التأسيس');
+    b+='<ul style="font-size:10.5pt;line-height:1.9">'+condItems.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul>';
+  }
   // Founder conditions note
   b+=`<p style="margin-top:14pt;font-size:9.5pt;color:#333">شروط مؤسس الشركة: ألا يكون يعمل بالحكومة، ولا يمارس مهنة المحاماة، وأن يكون سنه فوق 21 عامًا.</p>`;
   b+=`<p style="margin-top:14pt;font-size:9pt;color:#555;text-align:center">مكتب محمود سالم للمحاسبة والمراجعة وتأسيس الشركات — 01222203004</p>`;
@@ -3173,57 +3246,59 @@ async function doImage(fmt){
 
 // Captures the paper into a properly paginated A4 PDF (multi-page if the
 // document is tall), returned as a Blob — reused by the "save all" bundle.
-async function buildPdfBlob(){
+/* PDF engine: renders an element (laid out at width W) into A4 pages.
+   - breaks pages between rows/paragraphs (no line cut in half)
+   - captures page by page when the document is long, so phones/iPhones never hit the canvas size limit (the cause of half/blank PDFs) */
+async function pdfFromNode(el,W){
   await ensureLib('html2canvas'); await ensureLib('jspdf');
+  try{ await Promise.all(Array.from(el.querySelectorAll('img')).map(im=>im.decode?im.decode().catch(()=>{}):0)); }catch(e){}
+  try{ if(document.fonts&&document.fonts.ready) await document.fonts.ready; }catch(e){}
+  const {jsPDF}=window.jspdf; const pdf=new jsPDF('p','mm','a4');
+  const pw=pdf.internal.pageSize.getWidth(), ph=pdf.internal.pageSize.getHeight(), M=7;
+  const pageCss=Math.floor((ph-2*M)*W/pw);
+  const box=el.getBoundingClientRect(); const total=Math.ceil(el.scrollHeight);
+  const cands=[total];
+  el.querySelectorAll('tr,p,li,h1,h2,h3,h4,img,.q-sec,.q-body>*,.q-body-tight>*,table,section,div').forEach(n=>{
+    const r=n.getBoundingClientRect(); if(r.height>0&&r.height<pageCss*0.9){ cands.push(Math.round(r.top-box.top)); cands.push(Math.round(r.bottom-box.top)); } });
+  const brk=[...new Set(cands)].filter(y=>y>0&&y<=total).sort((a,b)=>a-b);
+  const pages=[]; let y=0;
+  while(y<total-2){
+    let end=Math.min(total,y+pageCss);
+    if(end<total){ let best=0; for(const b of brk){ if(b>y+pageCss*0.45&&b<=y+pageCss) best=b; } if(best) end=best; }
+    pages.push([y,end]); y=end;
+  }
+  const scale=2, one=(W*scale)*(total*scale)<=12e6; // small enough → capture once
+  const base={scale,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',windowWidth:1280,logging:false};
+  let full=null;
+  if(one) full=await html2canvas(el,Object.assign({},base,{width:W,height:total}));
+  for(let i=0;i<pages.length;i++){
+    const [y0,y1]=pages[i], h=y1-y0;
+    let c;
+    if(full){ c=document.createElement('canvas'); c.width=full.width; c.height=Math.round(h*full.width/W); c.getContext('2d').drawImage(full,0,Math.round(y0*full.width/W),full.width,c.height,0,0,full.width,c.height); }
+    else{ /* long document: render one page window at a time (keeps every canvas small) */
+      const pv=document.createElement('div'); pv.style.cssText='position:absolute;left:-24000px;top:0;width:'+W+'px;height:'+h+'px;overflow:hidden;background:#fff;direction:rtl';
+      const cl=el.cloneNode(true); cl.style.position='static'; cl.style.left='0'; cl.style.marginTop=(-y0)+'px'; pv.appendChild(cl); document.body.appendChild(pv);
+      try{ c=await html2canvas(pv,Object.assign({},base,{width:W,height:h})); } finally{ pv.remove(); } }
+    if(i>0) pdf.addPage();
+    pdf.addImage(c.toDataURL('image/jpeg',0.92),'JPEG',0,M,pw,h*pw/W);
+  }
+  return pdf.output('blob');
+}
+/* lays out html (or a node) off-screen at A4-ish width and returns a PDF blob */
+async function pdfFromHtml(html){
+  const host=document.createElement('div');
+  host.style.cssText='position:absolute;left:-12000px;top:0;width:800px;background:#fff;direction:rtl';
+  if(typeof html==='string') host.innerHTML=html; else host.appendChild(html);
+  document.body.appendChild(host);
+  try{
+    const qp=host.querySelector('#quotePaper'); if(qp){ qp.style.display='block'; qp.style.width='800px'; qp.style.maxWidth='800px'; qp.style.boxShadow='none'; qp.style.borderRadius='0'; }
+    return await pdfFromNode(host,800);
+  } finally { host.remove(); }
+}
+async function buildPdfBlob(){
   const paper = document.getElementById('quotePaper');
   if(!paper || paper.style.display==='none') return null;
-
-  // Render a fixed-width (desktop) copy so the PDF looks the same from a phone or a PC
-  const host=document.createElement('div');
-  host.style.cssText='position:absolute;left:-12000px;top:0;width:800px;background:#fff';
-  const clone=paper.cloneNode(true);
-  clone.style.display='block'; clone.style.width='800px'; clone.style.maxWidth='800px';
-  host.appendChild(clone); document.body.appendChild(host);
-  let canvas;
-  try{
-    canvas = await html2canvas(clone,{
-      scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff',
-      width: 800, height: clone.scrollHeight, windowWidth: 1280, logging: false,
-    });
-  } finally { host.remove(); }
-
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF('p','mm','a4');
-  const pageW = pdf.internal.pageSize.getWidth();
-  const pageH = pdf.internal.pageSize.getHeight();
-
-  // Scale the captured canvas to the PDF page width, then slice it into
-  // as many A4-height pages as needed.
-  const imgW = pageW;
-  const imgH = (canvas.height * imgW) / canvas.width;
-  const pxPerPageMM = (canvas.width / imgW); // canvas px per output mm
-  const pageHeightInCanvasPx = pageH * pxPerPageMM;
-
-  let renderedPx = 0;
-  let pageIndex = 0;
-  while(renderedPx < canvas.height){
-    const sliceHeightPx = Math.min(pageHeightInCanvasPx, canvas.height - renderedPx);
-    const sliceCanvas = document.createElement('canvas');
-    sliceCanvas.width = canvas.width;
-    sliceCanvas.height = sliceHeightPx;
-    const ctx = sliceCanvas.getContext('2d');
-    ctx.drawImage(canvas, 0, renderedPx, canvas.width, sliceHeightPx, 0, 0, canvas.width, sliceHeightPx);
-    const sliceImgData = sliceCanvas.toDataURL('image/jpeg', 0.95);
-    const sliceHeightMM = (sliceHeightPx * imgW) / canvas.width;
-
-    if(pageIndex>0) pdf.addPage();
-    pdf.addImage(sliceImgData, 'JPEG', 0, 0, imgW, sliceHeightMM);
-
-    renderedPx += sliceHeightPx;
-    pageIndex++;
-  }
-
-  return pdf.output('blob');
+  return pdfFromHtml(paper.cloneNode(true));
 }
 
 // Share the project as a PDF through the Android/iOS share sheet (WhatsApp, Files, …).
@@ -3323,7 +3398,22 @@ function _collectPageStyles(){
   }).join('\n');
 }
 
+function _isIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1); }
+function _isStandalone(){ try{ return !!(navigator.standalone||matchMedia('(display-mode: standalone)').matches); }catch(e){ return false; } }
+function _printBusy(on){ let t=document.getElementById('prBusy'); if(!t){ t=document.createElement('div'); t.id='prBusy'; t.style.cssText='position:fixed;inset:0;z-index:6000;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center'; t.innerHTML='<div style="background:#fff;border-radius:18px;padding:18px 22px;font-weight:800;font-family:Cairo,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.3)">⏳ جاري تجهيز الطباعة…</div>'; document.body.appendChild(t); } t.style.display=on?'flex':'none'; }
+async function _printViaPdf(title, innerHTML){
+  _printBusy(true);
+  try{
+    const blob=await pdfFromHtml(innerHTML); const fname=(title||'مشروع تأسيس').replace(/[\\/:*?"<>|]/g,' ')+'.pdf';
+    if(window.AndroidBridge&&AndroidBridge.printPdf){ const b64=await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(String(r.result).split(',')[1]); r.onerror=rej; r.readAsDataURL(blob); }); AndroidBridge.printPdf(b64,title||''); return true; }
+    const file=new File([blob],fname,{type:'application/pdf'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file],title:fname}); }catch(e){} return true; }
+    _downloadBlob(blob,fname); return true;
+  }catch(e){ alert('تعذّر تجهيز الطباعة: '+(e&&e.message||e)); return true; }
+  finally{ _printBusy(false); }
+}
 function _openPrintWindow(title, innerHTML){
+  if((window.AndroidBridge&&AndroidBridge.printPdf)||(_isIOS()&&_isStandalone())){ _printViaPdf(title,innerHTML); return; }
   const styles=_collectPageStyles();
   const head='<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>مشروع تأسيس شركات</title>'
     
@@ -3441,10 +3531,12 @@ function buildSavedStateObject(){
       isDirector: p.isDirector,
       isExternal: !!p.isExternal,
       isFemale: !!p.isFemale,
+      isForeign: !!p.isForeign,
       perms: [...p.perms],
     })),
     permsSharedMode: [...S.permsSharedMode],
     customPerms: [...S.customPerms],
+    permOrder: permSeq().slice(),
     permsManual: S.permsManual||'',
     permsManualOn: !!S.permsManualOn,
     partnerCount: partnerCount,
@@ -3623,6 +3715,7 @@ function restoreSavedState(saved){
   // Custom permissions — restore BEFORE partners so each rebuilt director block
   // gets the right number of custom checkbox slots and the shared list shows up.
   S.customPerms = Array.isArray(saved.customPerms) ? [...saved.customPerms] : [];
+  S.permOrder = Array.isArray(saved.permOrder) ? [...saved.permOrder] : [];
   renderCustomPermList();
 
   // Manual permissions override
@@ -3667,6 +3760,7 @@ function restoreSavedState(saved){
           isDirector: p.isExternal ? true : p.isDirector,
           isExternal: !!p.isExternal,
           isFemale: !!p.isFemale,
+          isForeign: !!p.isForeign,
           perms: [...p.perms],
         };
         if(!p.isExternal && !(isSolo && i===0)){
@@ -3689,6 +3783,7 @@ function restoreSavedState(saved){
         // Female checkbox
         const femEl = document.getElementById('pfem_'+pIdx);
         if(femEl) femEl.checked = !!p.isFemale;
+        const forEl=document.getElementById('pfor_'+pIdx); if(forEl) forEl.checked=!!p.isForeign;
 
         // Director checkbox + permissions (external/solo are director by design already)
         const dirEl = document.getElementById('pdir_'+pIdx);
@@ -3984,6 +4079,34 @@ function phoneKey(p){
   if(d.length===10&&d[0]==='1') d='0'+d;
   return d;
 }
+/* one record per phone number: the most recently edited form wins; older copies become deletions
+   (so the sheet cleans itself on the next sync). Approval/payments on an older copy are carried over, never lost. */
+function dedupeByPhone(list){
+  const t=r=>String(r.updatedAt||r.createdAt||'');
+  const groups={}; let removed=0;
+  list.forEach(r=>{ if(!r||r.deleted||r.manual||!r.state) return; const k=phoneKey(r.state.clientPhone); if(!k) return; (groups[k]=groups[k]||[]).push(r); });
+  const now=new Date().toISOString(); const drop=new Set(); let cur='';
+  try{ cur=localStorage.getItem('msalem_current_archive_id_v1')||''; }catch(e){}
+  Object.values(groups).forEach(g=>{
+    if(g.length<2) return;
+    g.sort((a,b)=>t(b).localeCompare(t(a)));
+    const keep=g[0];
+    g.slice(1).forEach(o=>{
+      if(!keep.approved&&o.approved&&!(keep.unapprovedAt&&String(keep.unapprovedAt)>=t(o))) keep.approved=o.approved;
+      else if(keep.approved&&o.approved&&o.approved!==keep.approved){
+        const ids=new Set((keep.approved.entries||[]).map(e=>e.id)); (o.approved.entries||[]).forEach(e=>{ if(e&&e.id&&!ids.has(e.id)) (keep.approved.entries=keep.approved.entries||[]).push(e); });
+      }
+      if(cur===o.id){ try{ localStorage.setItem('msalem_current_archive_id_v1',keep.id); }catch(e){} }
+      drop.add(o.id); removed++;
+    });
+    if(removed) keep.updatedAt=keep.updatedAt>now?keep.updatedAt:now;
+  });
+  if(!removed) return {list,removed:0};
+  return {list:list.map(r=>drop.has(r.id)?{id:r.id,deleted:true,updatedAt:now,state:{}}:r),removed};
+}
+function dedupeArchiveNow(){
+  try{ const d=dedupeByPhone(loadArchiveRaw()); if(d.removed){ persistArchive(d.list); bgSync(); } return d.removed; }catch(e){ return 0; }
+}
 async function archiveUpsertByPhone(state){
   const key=phoneKey(state.clientPhone);
   if(!key){ alert('اكتبي رقم تليفون العميل الأول — الرقم هو اللي بيحدد النموذج (نفس الرقم = نفس النموذج، رقم جديد = نموذج جديد).'); return {ok:false}; }
@@ -4016,6 +4139,7 @@ function flashSaved(msg){
 }
 
 function openArchive(){
+  dedupeArchiveNow();
   document.getElementById('archiveOverlay').classList.add('show');
   updateArchiveBadge();
   renderArchiveList();
@@ -4625,30 +4749,7 @@ function apAllHtml(){
 }
 function apPrintOne(id){ const r=loadArchive().find(x=>x.id===id); if(!r||!r.approved) return; _openPrintWindow('كشف حساب - '+apName(r),apStmtHtml(r)); }
 function apPrintAll(){ const h=apAllHtml(); if(!h){ alert('مفيش عروض معتمدة لطباعتها.'); return; } _openPrintWindow('كشف التحصيلات',h); }
-async function apHtmlToPdf(html){
-  await ensureLib('html2canvas'); await ensureLib('jspdf');
-  const host=document.createElement('div');
-  host.style.cssText='position:absolute;left:-12000px;top:0;width:800px;background:#fff';
-  host.innerHTML=html; document.body.appendChild(host);
-  let canvas;
-  try{
-    await Promise.all(Array.from(host.querySelectorAll('img')).map(im=>im.decode?im.decode().catch(()=>{}):Promise.resolve()));
-    if(document.fonts&&document.fonts.ready) await document.fonts.ready;
-    canvas=await html2canvas(host,{scale:2,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',width:800,height:host.scrollHeight,windowWidth:1280,logging:false});
-  } finally { host.remove(); }
-  const {jsPDF}=window.jspdf; const pdf=new jsPDF('p','mm','a4');
-  const pw=pdf.internal.pageSize.getWidth(), ph=pdf.internal.pageSize.getHeight();
-  const pxPerMM=canvas.width/pw, pagePx=ph*pxPerMM; let y=0,pi=0;
-  while(y<canvas.height){
-    const h=Math.min(pagePx,canvas.height-y);
-    const sc=document.createElement('canvas'); sc.width=canvas.width; sc.height=h;
-    sc.getContext('2d').drawImage(canvas,0,y,canvas.width,h,0,0,canvas.width,h);
-    if(pi>0) pdf.addPage();
-    pdf.addImage(sc.toDataURL('image/jpeg',0.95),'JPEG',0,0,pw,h/pxPerMM);
-    y+=h; pi++;
-  }
-  return pdf.output('blob');
-}
+async function apHtmlToPdf(html){ return pdfFromHtml(html); }
 async function apPdf(id,share,btn){
   const tre=(id==='T'); const all=(id==='*')||tre; const r=all?null:loadArchive().find(x=>x.id===id);
   if(!all&&(!r||!r.approved)) return;
@@ -4873,7 +4974,7 @@ async function syncNow(opts){
   setSyncStatus('🔄 جاري المزامنة...','#B45309');
   try{
     const remote=await cloudPull(!opts.silent); // manual button = full pull, automatic = only what changed
-    const merged=mergeArchiveLists(loadArchiveRaw(), remote||[]);
+    const merged=dedupeByPhone(mergeArchiveLists(loadArchiveRaw(), remote||[])).list;
     persistArchive(merged);
     const _rk=new Set((remote||[]).map(r=>r.id+'|'+(r.updatedAt||r.createdAt||'')));
     await cloudPush(merged.filter(r=>!_rk.has(r.id+'|'+(r.updatedAt||r.createdAt||''))));
@@ -5306,9 +5407,32 @@ renderActCatSel(); renderActPicker();
 syncInitUI();
 if(syncConfigured()) setTimeout(()=>syncNow({silent:true}), 400);
 </script>
+<script id="iosInputJs">
+/* turn the sidebar into iOS-style grouped cards with a colored icon per section */
+(function(){
+  const COLORS=['#0A84FF','#30D158','#FF9F0A','#FF375F','#BF5AF2','#64D2FF','#5E5CE6','#FF453A','#32D74B','#FFD60A','#AC8E68','#66D4CF'];
+  function go(){
+    const sb=document.querySelector('aside.sidebar'); if(!sb||sb.dataset.ios) return; sb.dataset.ios='1';
+    let ci=0, grp=null;
+    Array.from(sb.children).forEach(el=>{
+      if(el.classList.contains('sec-lbl')){
+        el.classList.add('ios-h');
+        const t=el.textContent.trim(); const m=t.match(/^(\p{Extended_Pictographic}(?:️|‍\p{Extended_Pictographic})*)\s*/u);
+        if(m){ el.innerHTML='<span class="ios-ico" style="background:'+COLORS[ci++%COLORS.length]+'">'+m[1]+'</span><span>'+t.slice(m[0].length)+'</span>'; }
+        grp=document.createElement('div'); grp.className='ios-group'; el.after(grp); return;
+      }
+      if(!grp) return;
+      if(el.classList.contains('sec-toggle')||el.classList.contains('sec-body')||el.tagName==='SCRIPT'||el.classList.contains('archive-bar')){ grp=null; return; }
+      grp.appendChild(el);
+    });
+    sb.querySelectorAll('.ios-group').forEach(g=>{ if(!g.children.length) g.remove(); });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go();
+})();
+</script>
 <script id="pwaUpdater">
 /* تحديث تلقائي لنسخة الموقع (الأيفون/PWA): بيقارن رقم الإصدار بالسيرفر وبيعرض زرار تحديث */
-const APP_BUILD='20261114164041';
+const APP_BUILD='20261116131350';
 function appUpdateNow(){
   const go=()=>{ try{ location.replace(location.pathname+'?v='+Date.now()); }catch(e){ location.reload(); } };
   Promise.resolve().then(()=>navigator.serviceWorker&&navigator.serviceWorker.getRegistrations?navigator.serviceWorker.getRegistrations():[])
