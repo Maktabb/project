@@ -885,7 +885,9 @@ html[data-mode=dark] .arch-set>summary{color:#e5e7eb}
 /* ══════════════════════════════════════
    PRINT
 ══════════════════════════════════════ */
+@page{margin:0}
 @media print{
+  body{padding:8mm 0!important}
   html,body,.screen-wrap,.main-pane,.preview-wrap,#quotePaper{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;position:static!important}
   .m-nav,#updToast,.archive-overlay,.ap-dlg-ov,#appSplash,#prBusy{display:none!important}
   #quotePaper tr,#quotePaper p{break-inside:avoid;page-break-inside:avoid}
@@ -3000,7 +3002,7 @@ function recalc(){
    ACTION FUNCTIONS
 ══════════════════════════════════════ */
 function doPrint(){
-  if((window.AndroidBridge&&AndroidBridge.printPdf)||(_isIOS()&&_isStandalone())){ const p=_paperOrAlert(); if(!p) return; _printViaPdf('مشروع تأسيس - '+(S.nameAr||S.nameEn||''), p.cloneNode(true)); return; }
+  { const p=_paperOrAlert(); if(!p) return; _printViaPdf('مشروع تأسيس - '+(S.nameAr||S.nameEn||''), p.cloneNode(true)); return; }
   if(window.AndroidBridge){ const p=_paperOrAlert(); if(!p) return; _openPrintWindow('مشروع تأسيس - '+(S.nameAr||S.nameEn||''), p.outerHTML); return; }
   window.print();
 }
@@ -3401,19 +3403,33 @@ function _collectPageStyles(){
 function _isIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1); }
 function _isStandalone(){ try{ return !!(navigator.standalone||matchMedia('(display-mode: standalone)').matches); }catch(e){ return false; } }
 function _printBusy(on){ let t=document.getElementById('prBusy'); if(!t){ t=document.createElement('div'); t.id='prBusy'; t.style.cssText='position:fixed;inset:0;z-index:6000;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center'; t.innerHTML='<div style="background:#fff;border-radius:18px;padding:18px 22px;font-weight:800;font-family:Cairo,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.3)">⏳ جاري تجهيز الطباعة…</div>'; document.body.appendChild(t); } t.style.display=on?'flex':'none'; }
+/* print our own PDF (no browser header/footer → no website link, date or page title on the paper) */
+function _printPdfBlob(blob,fname){
+  const url=URL.createObjectURL(blob);
+  const old=document.getElementById('prFrame'); if(old) old.remove();
+  const fr=document.createElement('iframe'); fr.id='prFrame'; fr.title=fname;
+  fr.style.cssText='position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0;pointer-events:none';
+  let done=false;
+  fr.onload=()=>{ if(done) return; done=true; setTimeout(()=>{ try{ fr.contentWindow.focus(); fr.contentWindow.print(); }catch(e){ const w=window.open(url,'_blank'); if(!w) _downloadBlob(blob,fname); } },400); };
+  fr.src=url; document.body.appendChild(fr);
+  setTimeout(()=>{ if(!done){ done=true; const w=window.open(url,'_blank'); if(!w) _downloadBlob(blob,fname); } },6000);
+  setTimeout(()=>{ try{ fr.remove(); URL.revokeObjectURL(url); }catch(e){} },15*60*1000);
+}
 async function _printViaPdf(title, innerHTML){
   _printBusy(true);
   try{
     const blob=await pdfFromHtml(innerHTML); const fname=(title||'مشروع تأسيس').replace(/[\\/:*?"<>|]/g,' ')+'.pdf';
     if(window.AndroidBridge&&AndroidBridge.printPdf){ const b64=await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(String(r.result).split(',')[1]); r.onerror=rej; r.readAsDataURL(blob); }); AndroidBridge.printPdf(b64,title||''); return true; }
-    const file=new File([blob],fname,{type:'application/pdf'});
-    if(navigator.canShare&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file],title:fname}); }catch(e){} return true; }
-    _downloadBlob(blob,fname); return true;
+    if(_isIOS()){
+      const file=new File([blob],fname,{type:'application/pdf'});
+      if(navigator.canShare&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file],title:fname}); }catch(e){} return true; }
+    }
+    _printPdfBlob(blob,fname); return true;
   }catch(e){ alert('تعذّر تجهيز الطباعة: '+(e&&e.message||e)); return true; }
   finally{ _printBusy(false); }
 }
 function _openPrintWindow(title, innerHTML){
-  if((window.AndroidBridge&&AndroidBridge.printPdf)||(_isIOS()&&_isStandalone())){ _printViaPdf(title,innerHTML); return; }
+  _printViaPdf(title,innerHTML); return;
   const styles=_collectPageStyles();
   const head='<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>مشروع تأسيس شركات</title>'
     
@@ -5432,7 +5448,7 @@ if(syncConfigured()) setTimeout(()=>syncNow({silent:true}), 400);
 </script>
 <script id="pwaUpdater">
 /* تحديث تلقائي لنسخة الموقع (الأيفون/PWA): بيقارن رقم الإصدار بالسيرفر وبيعرض زرار تحديث */
-const APP_BUILD='20261116131350';
+const APP_BUILD='20261116135012';
 function appUpdateNow(){
   const go=()=>{ try{ location.replace(location.pathname+'?v='+Date.now()); }catch(e){ location.reload(); } };
   Promise.resolve().then(()=>navigator.serviceWorker&&navigator.serviceWorker.getRegistrations?navigator.serviceWorker.getRegistrations():[])
