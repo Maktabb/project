@@ -584,6 +584,13 @@ body{font-family:'Cairo',sans-serif;background:var(--gray-bg);color:var(--navy);
 .chk-row input{width:15px!important;height:15px!important;accent-color:var(--gold);cursor:pointer;flex-shrink:0}
 .perm-block{margin-top:8px;padding:9px 10px;background:rgba(var(--fg),.03);border:1px dashed rgba(var(--fg),.1);border-radius:7px;display:none}
 .perm-block.show{display:block}
+.auto-last-tag{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:-2px 0 10px;padding:7px 10px;border-radius:11px;background:rgba(10,132,255,.13);color:#9CCBFF;font-size:.72rem;font-weight:700}
+.auto-last-tag.man{background:rgba(255,159,10,.13);color:#FFD08A}
+.auto-last-tag button{border:0;border-radius:9px;background:rgba(255,255,255,.14);color:#fff;font-family:inherit;font-weight:800;font-size:.7rem;padding:5px 9px;white-space:nowrap;cursor:pointer}
+.share-chk{border-radius:14px;padding:11px 13px;margin:4px 0 14px;font-size:.8rem;font-weight:700;line-height:1.75}
+.share-chk.ok{background:rgba(48,209,88,.14);color:#7EE2A0;border:1px solid rgba(48,209,88,.4)}
+.share-chk.bad{background:rgba(255,69,58,.15);color:#FFB4AE;border:1px solid rgba(255,69,58,.55);animation:shPulse 1.6s ease 1}
+@keyframes shPulse{0%{transform:scale(.98)}50%{transform:scale(1.01)}100%{transform:none}}
 .prm-head{display:flex;justify-content:space-between;align-items:center;margin:2px 0 8px;font-size:.78rem;font-weight:800;color:var(--gold-light)}
 .prm-head button{border:0;background:rgba(var(--fg),.1);color:rgba(var(--fg),.85);border-radius:9px;padding:4px 9px;margin-right:5px;font-family:inherit;font-size:.68rem;font-weight:800;cursor:pointer}
 .prm-list{display:flex;flex-direction:column;gap:6px}
@@ -1014,7 +1021,7 @@ html[data-mode=dark] .ap-dlg .row button.ok{background:#16A34A}
 /* ===== iOS-inspired skin: squircle icons, glass bars, segmented tabs, grouped cards ===== */
 :root{--ios-r:16px;--ios-blue:#0A84FF;--ios-green:#30D158;--ios-orange:#FF9F0A;--ios-red:#FF453A;--ios-teal:#1B8A7E;--ios-ease:cubic-bezier(.2,.8,.2,1)}
 html{-webkit-tap-highlight-color:transparent}
-body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
+body{-webkit-font-smoothing:antialiased}
 button,.ab-circle,.archive-act,.arch-tab,.ap-chip.click{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 button:active:not(:disabled){transform:scale(.96);filter:brightness(.94)}
 /* home-screen style action bar */
@@ -1078,7 +1085,7 @@ button:active:not(:disabled){transform:scale(.96);filter:brightness(.94)}
 /* update toast */
 #updToast{position:fixed;left:12px;right:12px;bottom:max(14px,env(safe-area-inset-bottom));z-index:5000;display:none;align-items:center;gap:10px;background:rgba(28,28,30,.92);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);color:#fff;border-radius:18px;padding:12px 14px;box-shadow:0 12px 40px rgba(0,0,0,.4);font-weight:800;font-size:.86rem;animation:iosPop .3s var(--ios-ease)}
 #updToast.show{display:flex}#updToast span{flex:1}#updToast button{border:0;border-radius:12px;background:#0A84FF;color:#fff;font-family:inherit;font-weight:800;padding:9px 16px;font-size:.84rem}
-@media screen and (max-width:1100px),screen and (hover:none) and (pointer:coarse){html,body{height:auto!important;overflow-y:auto!important}.screen-wrap{min-height:0!important}.sidebar{position:static!important;height:auto!important;overflow:visible!important}}
+@media screen and (max-width:1100px),screen and (hover:none) and (pointer:coarse){.screen-wrap{min-height:0!important}.sidebar{position:static!important;height:auto!important;overflow:visible!important}}
 /* full-screen archive tabs: header stays put, the CONTENT scrolls (works with iOS dynamic toolbar) */
 .archive-overlay.full{overflow:hidden!important;padding:0!important}
 .archive-overlay.full .archive-modal{height:100vh!important;height:100dvh!important;min-height:0!important;max-height:none!important}
@@ -1087,6 +1094,7 @@ button:active:not(:disabled){transform:scale(.96);filter:brightness(.94)}
 .archive-overlay.full .ap-wrap{flex:1 1 auto!important;min-height:0!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-bottom:calc(40px + env(safe-area-inset-bottom))!important}
 .archive-overlay.full .archive-head{padding:12px 16px!important}
 .archive-overlay.full .arch-tabs{margin:6px 12px 2px!important}
+@media screen and (max-width:1100px),(hover:none) and (pointer:coarse){input:not([type=checkbox]):not([type=radio]),select,textarea{font-size:16px!important}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 <style id="iosInput">
@@ -1275,7 +1283,7 @@ setTimeout(go,14000);
   <div class="field">
     <label>قيمة رأس المال (جنيه)</label>
     <div class="cap-wrap">
-      <input type="number" id="capitalValue" placeholder="مثال: 50000" min="1000" oninput="onCapitalInput()">
+      <input type="number" id="capitalValue" placeholder="مثال: 50000" min="1000" oninput="onCapitalInput()" onfocus="capFocus()" onchange="capChanged()">
       <span class="cap-suffix">ج</span>
     </div>
     <div class="cap-detected" id="capDetected"></div>
@@ -1297,6 +1305,7 @@ setTimeout(go,14000);
       <button class="add-partner-btn" style="margin:0" onclick="setPartnersCount(2)">شريكان فأكثر</button>
     </div>
   <div id="partnersContainer"></div>
+  <div id="shareCheck" class="share-chk" style="display:none"></div>
   <button class="add-partner-btn" id="addPartnerBtn" onclick="addPartner()" style="display:none">➕ إضافة شريك</button>
   <button class="add-partner-btn" id="addExternalBtn" onclick="addExternalDirector()" style="display:none;margin-top:4px;border-color:rgba(240,208,128,.5);color:var(--gold-light)">➕ إضافة مدير من خارج الشركاء</button>
   </div>
@@ -1723,7 +1732,7 @@ VOS.forEach(v=>{ VOS_LABELS[v.key]=v.label; });
 ══════════════════════════════════════ */
 let S={
   nameAr:'',nameEn:'',clientName:'',clientPhone:'',govIdx:null,
-  capitalValue:0,capTierIdx:null,
+  capitalValue:0,capTierIdx:null,autoLast:true,
   partners:[], // [{name, share, isDirector, isExternal, perms:[bool x (7+customPerms)]}]
   customPerms:[], // freeform permission texts added by the office — appended after the 7 standard PERMS
   permsSharedMode:Array(PERMS.length).fill(null), // per-permission (incl. custom): 'joint'|'solo'|null — shared by whoever holds it
@@ -1944,7 +1953,7 @@ function addPartner(solo=false, external=false){
           <div><label style="font-size:.75rem;color:rgba(var(--fg),.6);font-weight:700;display:block;margin-bottom:4px">قيمة الحصة (جنيه)</label>
             <input type="number" id="pshare_${pIdx}" min="0" placeholder="0" oninput="onShareInput(${pIdx})" style="background:rgba(var(--fg),.07);border:1.5px solid rgba(var(--fg),.11);border-radius:7px;padding:8px 11px;color:white;font-family:'Cairo',sans-serif;font-size:.85rem;width:100%"></div>
           <div><label style="font-size:.75rem;color:rgba(var(--fg),.6);font-weight:700;display:block;margin-bottom:4px">النسبة %</label>
-            <div class="pct-box" id="ppct_${pIdx}">—</div></div>
+            <input type="number" class="pct-in" id="ppct_${pIdx}" min="0" max="100" step="0.01" placeholder="—" oninput="onPctInput(${pIdx})" style="background:rgba(var(--fg),.07);border:1.5px solid rgba(var(--fg),.11);border-radius:7px;padding:8px 11px;color:white;width:100%"></div>
         </div>`
     }
     ${!external?`<label class="chk-row" id="dirLabel_${pIdx}">
@@ -1967,6 +1976,7 @@ function addPartner(solo=false, external=false){
   `;
   document.getElementById('partnersContainer').appendChild(div);
   renderCustomPermRows(pIdx);
+  if(!solo&&!external&&!window.__restoring) setTimeout(()=>{ applyAutoLast(); recalc(); },0);
 
   if(solo){
     S.partners[pIdx].share=S.capitalValue||0;
@@ -2155,24 +2165,92 @@ function updateSoloValue(pIdx){
 function deletePartner(pIdx,domIdx){
   S.partners.splice(pIdx,1);
   document.getElementById('pb_'+domIdx).remove();
+  applyAutoLast();
   recalc();
 }
 
 function onShareInput(pIdx){
   const val=+document.getElementById('pshare_'+pIdx).value||0;
   S.partners[pIdx].share=val;
+  if(pIdx===lastShareIdx()&&S.autoLast) S.autoLast=false; // typed the last partner by hand → stop auto-completing
   updatePct(pIdx);
+  applyAutoLast();
   recalc();
+}
+/* typing a percentage → value = capital × % */
+function onPctInput(pIdx){
+  const cap=S.capitalValue||0, pe=document.getElementById('ppct_'+pIdx);
+  if(!(cap>0)){ return; }
+  const pct=+pe.value||0, v=Math.round(cap*pct/100*100)/100;
+  S.partners[pIdx].share=v;
+  const se=document.getElementById('pshare_'+pIdx); if(se) se.value=v||'';
+  if(pIdx===lastShareIdx()&&S.autoLast) S.autoLast=false;
+  applyAutoLast(); recalc();
+}
+/* ── آخر شريك = المتمم لرأس المال ── */
+function shareIdxs(){ return S.partners.map((p,i)=>(p&&!p.isExternal&&document.getElementById('pshare_'+i))?i:-1).filter(i=>i>=0); }
+function lastShareIdx(){ const a=shareIdxs(); return a.length?a[a.length-1]:-1; }
+function applyAutoLast(){
+  const ids=shareIdxs(), L=lastShareIdx();
+  if(ids.length>=2&&S.autoLast&&S.capitalValue>0){
+    const others=ids.filter(i=>i!==L).reduce((a,i)=>a+(+S.partners[i].share||0),0);
+    const v=Math.max(0,Math.round((S.capitalValue-others)*100)/100);
+    S.partners[L].share=v;
+    const el=document.getElementById('pshare_'+L); if(el) el.value=v||'';
+    updatePct(L);
+  }
+  markAutoLast();
+}
+function markAutoLast(){
+  document.querySelectorAll('.auto-last-tag').forEach(e=>e.remove());
+  const ids=shareIdxs(), L=lastShareIdx(); if(ids.length<2) return;
+  const el=document.getElementById('pshare_'+L); const row=el&&el.closest('.field-row'); if(!row) return;
+  const t=document.createElement('div'); t.className='auto-last-tag'+(S.autoLast?'':' man');
+  t.innerHTML=S.autoLast?'<span>🔁 متمم تلقائي: بياخد الباقي من رأس المال</span><button type="button" onclick="setAutoLast(false)">✏️ اكتب يدوي</button>'
+                        :'<span>✏️ قيمة يدوية</span><button type="button" onclick="setAutoLast(true)">🔁 خليه المتمم</button>';
+  row.after(t);
+}
+function setAutoLast(v){ S.autoLast=!!v; applyAutoLast(); recalc(); }
+/* capital edited on a form whose shares were already complete → ask how to adjust */
+let _capBefore=null;
+function capFocus(){ const c=shareCheck(); _capBefore=(c.active&&c.ok&&shareIdxs().filter(i=>(+S.partners[i].share||0)>0).length>=2)?{cap:c.cap,shares:S.partners.map(p=>+p.share||0)}:null; }
+function capChanged(){
+  const b=_capBefore; _capBefore=null;
+  const cap=S.capitalValue||0;
+  if(!b||!(cap>0)||Math.abs(cap-b.cap)<0.01) { capFocus(); return; }
+  const f=n=>Number(n).toLocaleString('en-US');
+  const ids=shareIdxs(), L=lastShareIdx();
+  const others=ids.filter(i=>i!==L).reduce((a,i)=>a+b.shares[i],0);
+  const canLast=cap-others>=0;
+  const html='رأس المال اتغيّر من <b>'+f(b.cap)+'</b> إلى <b>'+f(cap)+'</b> ج.<br>تحبي حصص الشركاء تتعدّل إزاي؟'
+   +'<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">'
+   +'<button type="button" class="ios-btn pri" onclick="capApply(\'pct\')">📊 الحفاظ على النسب — كل الحصص تتعدّل بنفس النسبة</button>'
+   +'<button type="button" class="ios-btn"'+(canLast?'':' disabled style="opacity:.45"')+' onclick="capApply(\'last\')">🔁 ترحيل الفرق لآخر شريك ('+(canLast?f(cap-others)+' ج':'مش ممكن — الباقي بالسالب')+')</button>'
+   +'<button type="button" class="ios-btn" onclick="capApply(\'manual\')">✏️ هعدّل بإيدي</button></div>';
+  window.__capB=b;
+  apDialog('💰 تعديل رأس المال',[{type:'info',id:'ci',html:html}],'تم',()=>{ capApply('manual'); });
+  try{ const ok=document.getElementById('apDlgOk'); if(ok) ok.style.display='none'; }catch(e){}
+}
+function capApply(mode){
+  const b=window.__capB; window.__capB=null; try{ apDlgClose(); }catch(e){}
+  if(!b) return; const cap=S.capitalValue||0; const ids=shareIdxs(), L=lastShareIdx();
+  if(mode==='pct'){
+    let acc=0; ids.forEach(i=>{ if(i===L) return; const v=Math.round(b.shares[i]*cap/b.cap*100)/100; S.partners[i].share=v; acc+=v; });
+    S.partners[L].share=Math.max(0,Math.round((cap-acc)*100)/100); S.autoLast=true;
+  } else if(mode==='last'){
+    ids.forEach(i=>{ if(i!==L) S.partners[i].share=b.shares[i]; }); S.autoLast=true;
+  } else { S.autoLast=false; }
+  ids.forEach(i=>{ const el=document.getElementById('pshare_'+i); if(el) el.value=S.partners[i].share||''; updatePct(i); });
+  applyAutoLast(); recalc(); capFocus();
 }
 
 function updatePct(pIdx){
   const cap=S.capitalValue||0;
   const box=document.getElementById('ppct_'+pIdx);
   if(!box)return;
-  if(cap>0&&S.partners[pIdx].share>0){
-    const pct=(S.partners[pIdx].share/cap*100).toFixed(2).replace(/\.?0+$/,'');
-    box.textContent=pct+'%';
-  } else {box.textContent='—';}
+  const pct=(cap>0&&S.partners[pIdx].share>0)?(S.partners[pIdx].share/cap*100).toFixed(2).replace(/\.?0+$/,''):'';
+  if(box.tagName==='INPUT'){ if(document.activeElement!==box) box.value=pct; }
+  else box.textContent=pct?pct+'%':'—';
 }
 
 function onDirChange(pIdx){
@@ -2357,6 +2435,8 @@ function onCapitalInput(){
 
   // update solo partner value if exists
   if(S.partners.length===1){S.partners[0].share=v;updateSoloValue(0);}
+  // first-time entry: the last partner completes the capital (an already-complete form asks on change instead)
+  if(!_capBefore) applyAutoLast();
   // update all pcts
   S.partners.forEach((_,i)=>updatePct(i));
   recalc();
@@ -2517,7 +2597,30 @@ function cleanForCopy(text){
     .replace(/\uFEFF/g, '');                         // BOM
 }
 
+/* مجموع حصص الشركاء لازم يساوي رأس المال */
+function shareCheck(){
+  const cap=+S.capitalValue||0, ps=S.partners||[];
+  const sum=ps.reduce((a,p)=>a+(+p.share||0),0), diff=sum-cap;
+  return {cap,sum,diff,ok:cap>0&&Math.abs(diff)<0.01,active:ps.length>1&&(cap>0||sum>0)};
+}
+function renderShareCheck(){
+  const el=document.getElementById('shareCheck'); if(!el) return;
+  const c=shareCheck(); if(!c.active){ el.style.display='none'; return; }
+  const f=n=>Number(n).toLocaleString('en-US');
+  el.style.display='block';
+  if(!c.cap){ el.className='share-chk bad'; el.innerHTML='⚠️ اكتبي رأس المال علشان نراجع مجموع الحصص ('+f(c.sum)+' ج).'; return; }
+  if(c.ok){ el.className='share-chk ok'; el.innerHTML='✅ مجموع حصص الشركاء = رأس المال ('+f(c.cap)+' ج)'; return; }
+  el.className='share-chk bad';
+  el.innerHTML='⚠️ <b>مجموع الحصص غير مطابق لرأس المال</b><br>مجموع الحصص: '+f(c.sum)+' ج — رأس المال: '+f(c.cap)+' ج<br>'+(c.diff>0?('زيادة '+f(c.diff)+' ج'):('ناقص '+f(-c.diff)+' ج'))+' ('+(c.sum/c.cap*100).toFixed(2).replace(/\.?0+$/,'')+'% من رأس المال)';
+}
+/* before printing / exporting / saving: ask once if the shares don't match */
+function shareCheckConfirm(){
+  const c=shareCheck(); if(!c.active||c.ok) return true;
+  const f=n=>Number(n).toLocaleString('en-US');
+  return confirm('⚠️ مجموع حصص الشركاء ('+f(c.sum)+' ج) مش مساوي لرأس المال ('+f(c.cap)+' ج).\n\nتكمّلي برضه؟');
+}
 function recalc(){
+  try{ setTimeout(renderShareCheck,0); }catch(e){}
   window.__qDocs=[];
   // Keep joint/solo toggles synced across all directors' cards
   syncPermModeUI();
@@ -3207,6 +3310,7 @@ async function doImage(fmt){
   try{ await ensureLib('html2canvas'); }catch(e){ alert(e.message); return; }
   const paper = document.getElementById('quotePaper');
   if(!paper || paper.style.display==='none'){alert('الرجاء إدخال بيانات أولاً');return;}
+  if(!shareCheckConfirm()) return;
 
   // Show loading
   const btn = event.target;
@@ -3309,6 +3413,7 @@ async function buildPdfBlob(){
 async function doSharePdf(){
   const paper=document.getElementById('quotePaper');
   if(!paper || !(S.nameAr||S.nameEn)){ alert('الرجاء إدخال بيانات الشركة أولاً.'); return; }
+  if(!shareCheckConfirm()) return;
   const btn=(typeof event!=='undefined'&&event)?event.target:null;
   const orig=btn?btn.textContent:'';
   if(btn){ btn.textContent='⏳ جاري التجهيز...'; btn.disabled=true; }
@@ -3453,6 +3558,7 @@ function _openPrintWindow(title, innerHTML){
 function _paperOrAlert(){
   const paper=document.getElementById('quotePaper');
   if(!paper || !(S.nameAr||S.nameEn)){ alert('الرجاء إدخال بيانات الشركة أولاً.'); return null; }
+  if(!shareCheckConfirm()) return null;
   return paper;
 }
 
@@ -3540,6 +3646,7 @@ function buildSavedStateObject(){
     clientEmail: S.clientEmail||'',
     govIdx: S.govIdx,
     capitalValue: S.capitalValue,
+    autoLast: !!S.autoLast,
     capTierIdx: S.capTierIdx,
     partners: S.partners.map((p,i)=>({
       name: p.name,
@@ -3720,6 +3827,9 @@ function restoreSavedState(saved){
   }
 
   // Capital
+  window.__restoring=true; setTimeout(()=>{ window.__restoring=false; try{ markAutoLast(); }catch(e){} },1500);
+  if(saved.autoLast!==undefined) S.autoLast=!!saved.autoLast;
+  else { const ps=(saved.partners||[]).filter(p=>!p.isExternal); const sm=ps.reduce((a,p)=>a+(+p.share||0),0); S.autoLast=!ps.length||(saved.capitalValue>0&&Math.abs(sm-saved.capitalValue)<0.01); }
   if(saved.capitalValue){
     document.getElementById('capitalValue').value = saved.capitalValue;
     S.capitalValue = saved.capitalValue;
@@ -5244,6 +5354,7 @@ async function saveCurrentQuick(btn){
 ══════════════════════════════════════ */
 async function doDesktopWhatsAppPdf(btn){
   if(!(S.nameAr||S.nameEn)){ alert('الرجاء إدخال بيانات الشركة أولاً.'); return; }
+  if(!shareCheckConfirm()) return;
   let phone=(S.clientPhone||'').replace(/\D/g,'');
   if(phone.indexOf('00')===0) phone=phone.slice(2); else if(phone.indexOf('0')===0) phone='2'+phone; else if(phone && phone.indexOf('20')!==0) phone='2'+phone;
   const w=window.open('about:blank','_blank'); // opened now so the popup isn't blocked after the PDF is built
@@ -5448,7 +5559,7 @@ if(syncConfigured()) setTimeout(()=>syncNow({silent:true}), 400);
 </script>
 <script id="pwaUpdater">
 /* تحديث تلقائي لنسخة الموقع (الأيفون/PWA): بيقارن رقم الإصدار بالسيرفر وبيعرض زرار تحديث */
-const APP_BUILD='20261116135012';
+const APP_BUILD='20261117133256';
 function appUpdateNow(){
   const go=()=>{ try{ location.replace(location.pathname+'?v='+Date.now()); }catch(e){ location.reload(); } };
   Promise.resolve().then(()=>navigator.serviceWorker&&navigator.serviceWorker.getRegistrations?navigator.serviceWorker.getRegistrations():[])
@@ -5479,6 +5590,56 @@ function appShowUpd(){
   document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') appCheckUpdate(); });
   setInterval(appCheckUpdate,10*60*1000);
 })();
+</script>
+<script id="teamMode">
+/* ===== نسخة الفريق: إنشاء/تعديل العروض + المعتمد بدون حسابات أو دفعات ===== */
+window.TEAM_MODE=true;
+(function(){
+  function strip(){
+    document.querySelectorAll('button[onclick^="apPassSettings"]').forEach(b=>b.remove());
+    document.querySelectorAll('.ab-item').forEach(i=>{ if(i.querySelector('button[onclick="openApproved()"]')) i.remove(); });
+    document.title='مشروع تأسيس شركات';
+  }
+  if(document.readyState!=='loading') strip(); else document.addEventListener('DOMContentLoaded',strip);
+  setTimeout(strip,300);
+})();
+function apIsLocked(){ return false; }
+function apPassSettings(){}
+/* اعتماد بسيط: بياخد إجمالي العرض زي ما هو، من غير تسويات أو دفعات */
+async function apApprove(id){
+  const rec=loadArchive().find(r=>r.id===id); if(!rec) return;
+  if(!confirm('اعتماد عرض «'+apName(rec)+'»؟\nهيتنقل لتاب العروض المعتمدة.')) return;
+  let base=0; try{ base=await apQuoteTotal(rec)||0; }catch(e){}
+  await apMutate(id,r=>{ r.approved={amount:base,quoteAmount:base,adj:null,at:apToday(),note:'',entries:(r.approved&&r.approved.entries)||[]}; });
+  _apOpen[id]=false; archTab('app');
+}
+function apOpenStmt(id){ openArchive(); archTab('app'); }
+function apAddNew(){}
+/* تاب المعتمد: اسم + عميل + تاريخ + نسبة الإتمام والمستندات — بدون أي أرقام مالية */
+function renderApproved(){
+  const wrap=document.getElementById('apWrap'); if(!wrap) return;
+  const all=loadArchive().filter(r=>r.approved);
+  const qEl=document.getElementById('apSearch'); const q=qEl?qEl.value.trim().toLowerCase():'';
+  let list=all.filter(r=>!q||((apName(r)+' '+(r.state.clientName||'')).toLowerCase().includes(q)));
+  list.sort((a,b)=>String(a.approved.at||a.createdAt||'').localeCompare(String(b.approved.at||b.createdAt||'')));
+  const cnt={}; list.forEach(r=>{ const k=monKey(r.approved.at||r.createdAt); cnt[k]=(cnt[k]||0)+1; });
+  let last=null;
+  let h='<div class="ap-tools"><input type="text" class="archive-search" id="apSearch" placeholder="🔍 بحث باسم الشركة أو العميل..." value="'+escapeHtml(q)+'" oninput="renderApproved();var e=document.getElementById(\'apSearch\');e.focus();e.setSelectionRange(e.value.length,e.value.length)"></div>';
+  if(!list.length) h+='<div class="archive-empty">'+(all.length?'لا توجد نتائج مطابقة.':'لسه مفيش عروض معتمدة.<br>اعتمدي عرض من تاب «كل العروض» بزر ✅.')+'</div>';
+  h+=list.map(r=>{
+    const k=monKey(r.approved.at||r.createdAt); let mh='';
+    if(k!==last){ last=k; mh='<div class="mon-h"><span>📅 '+monLabel(k)+'</span><small>'+cnt[k]+' عرض</small></div>'; }
+    const dp=apDocsProg(r);
+    const chip=dp?('<span class="ap-chip click '+(dp.pct>=100?'ok':'bad')+'" onclick="event.stopPropagation();apChecklist(\''+r.id+'\')">إتمام '+dp.pct+'%</span>'):'<span class="ap-chip click na" onclick="event.stopPropagation();apChecklist(\''+r.id+'\')">إتمام —</span>';
+    const d=new Date(r.approved.at||r.createdAt).toLocaleDateString('ar-EG',{year:'numeric',month:'short',day:'numeric'});
+    return mh+'<div class="ap-card"><div class="ap-top"><div style="min-width:0"><div class="ap-name" style="white-space:normal;overflow:visible">'+escapeHtml(apName(r))+'<span class="ap-chips"><span class="ap-chip ok">معتمد</span>'+chip+'</span></div><div class="ap-meta">'+(r.state.clientName?('👤 '+escapeHtml(r.state.clientName)+'  •  '):'')+'اعتماد: '+d+'</div></div>'
+      +'<button class="archive-act" title="فتح وتعديل العرض" onclick="loadFromArchive(\''+r.id+'\')">✏️</button></div></div>';
+  }).join('');
+  const hadFocus=document.activeElement&&document.activeElement.id==='apSearch';
+  wrap.innerHTML=h;
+  if(hadFocus){ const e=document.getElementById('apSearch'); if(e){ e.focus(); e.setSelectionRange(e.value.length,e.value.length); } }
+  updateArchiveBadge();
+}
 </script>
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){r.update&&r.update();}).catch(function(){});});}</script>
 </body>
