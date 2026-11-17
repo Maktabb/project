@@ -5591,56 +5591,6 @@ function appShowUpd(){
   setInterval(appCheckUpdate,10*60*1000);
 })();
 </script>
-<script id="teamMode">
-/* ===== نسخة الفريق: إنشاء/تعديل العروض + المعتمد بدون حسابات أو دفعات ===== */
-window.TEAM_MODE=true;
-(function(){
-  function strip(){
-    document.querySelectorAll('button[onclick^="apPassSettings"]').forEach(b=>b.remove());
-    document.querySelectorAll('.ab-item').forEach(i=>{ if(i.querySelector('button[onclick="openApproved()"]')) i.remove(); });
-    document.title='مشروع تأسيس شركات';
-  }
-  if(document.readyState!=='loading') strip(); else document.addEventListener('DOMContentLoaded',strip);
-  setTimeout(strip,300);
-})();
-function apIsLocked(){ return false; }
-function apPassSettings(){}
-/* اعتماد بسيط: بياخد إجمالي العرض زي ما هو، من غير تسويات أو دفعات */
-async function apApprove(id){
-  const rec=loadArchive().find(r=>r.id===id); if(!rec) return;
-  if(!confirm('اعتماد عرض «'+apName(rec)+'»؟\nهيتنقل لتاب العروض المعتمدة.')) return;
-  let base=0; try{ base=await apQuoteTotal(rec)||0; }catch(e){}
-  await apMutate(id,r=>{ r.approved={amount:base,quoteAmount:base,adj:null,at:apToday(),note:'',entries:(r.approved&&r.approved.entries)||[]}; });
-  _apOpen[id]=false; archTab('app');
-}
-function apOpenStmt(id){ openArchive(); archTab('app'); }
-function apAddNew(){}
-/* تاب المعتمد: اسم + عميل + تاريخ + نسبة الإتمام والمستندات — بدون أي أرقام مالية */
-function renderApproved(){
-  const wrap=document.getElementById('apWrap'); if(!wrap) return;
-  const all=loadArchive().filter(r=>r.approved);
-  const qEl=document.getElementById('apSearch'); const q=qEl?qEl.value.trim().toLowerCase():'';
-  let list=all.filter(r=>!q||((apName(r)+' '+(r.state.clientName||'')).toLowerCase().includes(q)));
-  list.sort((a,b)=>String(a.approved.at||a.createdAt||'').localeCompare(String(b.approved.at||b.createdAt||'')));
-  const cnt={}; list.forEach(r=>{ const k=monKey(r.approved.at||r.createdAt); cnt[k]=(cnt[k]||0)+1; });
-  let last=null;
-  let h='<div class="ap-tools"><input type="text" class="archive-search" id="apSearch" placeholder="🔍 بحث باسم الشركة أو العميل..." value="'+escapeHtml(q)+'" oninput="renderApproved();var e=document.getElementById(\'apSearch\');e.focus();e.setSelectionRange(e.value.length,e.value.length)"></div>';
-  if(!list.length) h+='<div class="archive-empty">'+(all.length?'لا توجد نتائج مطابقة.':'لسه مفيش عروض معتمدة.<br>اعتمدي عرض من تاب «كل العروض» بزر ✅.')+'</div>';
-  h+=list.map(r=>{
-    const k=monKey(r.approved.at||r.createdAt); let mh='';
-    if(k!==last){ last=k; mh='<div class="mon-h"><span>📅 '+monLabel(k)+'</span><small>'+cnt[k]+' عرض</small></div>'; }
-    const dp=apDocsProg(r);
-    const chip=dp?('<span class="ap-chip click '+(dp.pct>=100?'ok':'bad')+'" onclick="event.stopPropagation();apChecklist(\''+r.id+'\')">إتمام '+dp.pct+'%</span>'):'<span class="ap-chip click na" onclick="event.stopPropagation();apChecklist(\''+r.id+'\')">إتمام —</span>';
-    const d=new Date(r.approved.at||r.createdAt).toLocaleDateString('ar-EG',{year:'numeric',month:'short',day:'numeric'});
-    return mh+'<div class="ap-card"><div class="ap-top"><div style="min-width:0"><div class="ap-name" style="white-space:normal;overflow:visible">'+escapeHtml(apName(r))+'<span class="ap-chips"><span class="ap-chip ok">معتمد</span>'+chip+'</span></div><div class="ap-meta">'+(r.state.clientName?('👤 '+escapeHtml(r.state.clientName)+'  •  '):'')+'اعتماد: '+d+'</div></div>'
-      +'<button class="archive-act" title="فتح وتعديل العرض" onclick="loadFromArchive(\''+r.id+'\')">✏️</button></div></div>';
-  }).join('');
-  const hadFocus=document.activeElement&&document.activeElement.id==='apSearch';
-  wrap.innerHTML=h;
-  if(hadFocus){ const e=document.getElementById('apSearch'); if(e){ e.focus(); e.setSelectionRange(e.value.length,e.value.length); } }
-  updateArchiveBadge();
-}
-</script>
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){r.update&&r.update();}).catch(function(){});});}</script>
 </body>
 </html>
