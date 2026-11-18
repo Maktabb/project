@@ -1267,6 +1267,10 @@ setTimeout(go,14000);
       <option value="72">قانون 72 — الاستثمار</option>
     </select>
   </div>
+  <div class="field" id="purposeField">
+    <label>🎯 الهدف من التأسيس <span style="font-weight:400;opacity:.7;font-size:.75rem">(داخلي — لا يظهر في المخرجات)</span></label>
+    <textarea id="foundingPurpose" rows="3" placeholder="اكتبي هنا الهدف من تأسيس الشركة (للمكتب فقط)" oninput="S.foundingPurpose=this.value;autoSaveToBrowser()"></textarea>
+  </div>
 
   <!-- بيانات العميل -->
   <div class="sec-lbl">👤 بيانات العميل</div>
@@ -3641,6 +3645,7 @@ function buildSavedStateObject(){
     nameAr: S.nameAr,
     nameEn: S.nameEn,
     companyLaw: document.getElementById('companyLaw').value,
+    foundingPurpose: (document.getElementById('foundingPurpose')||{}).value||'',
     clientName: S.clientName,
     clientPhone: S.clientPhone,
     clientEmail: S.clientEmail||'',
@@ -3816,6 +3821,7 @@ function restoreSavedState(saved){
   document.getElementById('nameAr').value = saved.nameAr||'';
   document.getElementById('nameEn').value = saved.nameEn||'';
   document.getElementById('companyLaw').value = saved.companyLaw||'159';
+  document.getElementById('foundingPurpose').value = saved.foundingPurpose||''; S.foundingPurpose=saved.foundingPurpose||'';
   document.getElementById('clientName').value = saved.clientName||'';
   document.getElementById('clientPhone').value = saved.clientPhone||'';
   document.getElementById('clientEmail').value = saved.clientEmail||'';
@@ -5559,7 +5565,7 @@ if(syncConfigured()) setTimeout(()=>syncNow({silent:true}), 400);
 </script>
 <script id="pwaUpdater">
 /* تحديث تلقائي لنسخة الموقع (الأيفون/PWA): بيقارن رقم الإصدار بالسيرفر وبيعرض زرار تحديث */
-const APP_BUILD='20261117133256';
+const APP_BUILD='20261118231714';
 function appUpdateNow(){
   const go=()=>{ try{ location.replace(location.pathname+'?v='+Date.now()); }catch(e){ location.reload(); } };
   Promise.resolve().then(()=>navigator.serviceWorker&&navigator.serviceWorker.getRegistrations?navigator.serviceWorker.getRegistrations():[])
