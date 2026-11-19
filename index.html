@@ -1197,6 +1197,7 @@ setTimeout(go,14000);
       <button class="arch-tab on" id="archTabAll" onclick="archTab('all')">📂 كل العروض</button>
       <button class="arch-tab" id="archTabApp" onclick="archTab('app')">✅ العروض المعتمدة <span id="apTabCount"></span></button>
       <button class="arch-tab" id="archTabSum" onclick="archTab('sum')">📋 ملخص العروض</button>
+      <button class="arch-tab" id="archTabIn" onclick="archTab('in')">📥 إدخال العميل <span id="inTabCount"></span></button>
     </div>
     <div id="apTabAll">
     <div class="archive-toolbar">
@@ -1235,6 +1236,9 @@ setTimeout(go,14000);
     </div>
     <div id="apTabSum" style="display:none">
       <div class="ap-wrap" id="smWrap"></div>
+    </div>
+    <div id="apTabIn" style="display:none">
+      <div class="ap-wrap" id="inWrap"></div>
     </div>
   </div>
 </div>
@@ -4134,10 +4138,11 @@ function persistArchive(list){
 }
 
 function updateArchiveBadge(){
-  const list=loadArchive().filter(r=>!r.manual&&!r.approved);
+  const list=loadArchive().filter(r=>!r.manual&&!r.approved&&!r.intake);
+  const _ic=loadArchive().filter(r=>r.intake).length; const _itc=document.getElementById('inTabCount'); if(_itc) _itc.textContent=_ic?('('+_ic+')'):'';
   const _ac=loadArchive().filter(r=>r.approved).length; const _tc=document.getElementById('apTabCount'); if(_tc) _tc.textContent=_ac?('('+_ac+')'):'';
   const badge=document.getElementById('archiveCountBadge');
-  if(badge) badge.textContent=list.length>0?list.length:'';
+  if(badge) badge.textContent=(list.length+_ic)>0?(list.length+_ic):'';
   const head=document.getElementById('archiveHeadCount');
   if(head) head.textContent=list.length>0?(list.length+' شركة محفوظة'):'لا توجد شركات محفوظة';
 }
@@ -4216,7 +4221,7 @@ function phoneKey(p){
 function dedupeByPhone(list){
   const t=r=>String(r.updatedAt||r.createdAt||'');
   const groups={}; let removed=0;
-  list.forEach(r=>{ if(!r||r.deleted||r.manual||!r.state) return; const k=phoneKey(r.state.clientPhone); if(!k) return; (groups[k]=groups[k]||[]).push(r); });
+  list.forEach(r=>{ if(!r||r.deleted||r.manual||r.intake||!r.state) return; const k=phoneKey(r.state.clientPhone); if(!k) return; (groups[k]=groups[k]||[]).push(r); });
   const now=new Date().toISOString(); const drop=new Set(); let cur='';
   try{ cur=localStorage.getItem('msalem_current_archive_id_v1')||''; }catch(e){}
   Object.values(groups).forEach(g=>{
@@ -4245,7 +4250,7 @@ async function archiveUpsertByPhone(state){
   if(!(state.nameAr||state.nameEn||'').trim()){ alert('اكتبي اسم الشركة أولاً قبل الحفظ.'); return {ok:false}; }
   ensureDeviceName(); await refreshBeforeWrite();
   const list=loadArchive(); const now=new Date().toISOString();
-  let rec=list.find(r=>!r.manual&&phoneKey(r.state&&r.state.clientPhone)===key), created=false;
+  let rec=list.find(r=>!r.manual&&!r.intake&&phoneKey(r.state&&r.state.clientPhone)===key), created=false;
   if(rec){
     if(lockedByOther(rec)){ alert(lockMsg(rec)+'\nمش هينفع الحفظ عليه دلوقتي.'); return {ok:false}; }
     rec.state=state; rec.updatedAt=now; stampEdit(rec,now);
@@ -4288,7 +4293,7 @@ function monLabel(k){ if(!k) return 'بدون تاريخ'; try{ return new Date(
 let _arLimit=60;
 function arMore(){ _arLimit+=60; renderArchiveList(); }
 function renderArchiveList(){
-  const list=loadArchive().filter(r=>!r.manual&&!r.approved);
+  const list=loadArchive().filter(r=>!r.manual&&!r.approved&&!r.intake);
   const container=document.getElementById('archiveList');
   const q=(document.getElementById('archiveSearch').value||'').trim().toLowerCase();
 
@@ -4416,13 +4421,44 @@ function archTab(t){
   document.getElementById('apTabAll').style.display=t==='all'?'':'none';
   document.getElementById('apTabApp').style.display=t==='app'?'':'none';
   document.getElementById('apTabSum').style.display=t==='sum'?'':'none';
+  document.getElementById('apTabIn').style.display=t==='in'?'':'none';
+  document.getElementById('archTabIn').classList.toggle('on',t==='in');
   document.getElementById('archTabAll').classList.toggle('on',t==='all');
   document.getElementById('archTabApp').classList.toggle('on',t==='app');
   document.getElementById('archTabSum').classList.toggle('on',t==='sum');
   document.getElementById('archiveOverlay').classList.toggle('full',t!=='all');
-  if(t==='app') renderApproved(); else if(t==='sum') renderSummary(); else renderArchiveList();
+  if(t==='app') renderApproved(); else if(t==='sum') renderSummary(); else if(t==='in') renderIntake(); else renderArchiveList();
 }
 function openApproved(){ openArchive(); archTab('app'); }
+/* ══ إدخال العميل: بيانات بعتها العميل بنفسه من صفحة «إدخال العميل» — بتستنى مراجعة الفريق قبل ما تدخل الأرشيف ══ */
+function renderIntake(){
+  const wrap=document.getElementById('inWrap'); if(!wrap) return;
+  const list=loadArchive().filter(r=>r.intake).sort((a,b)=>String(b.updatedAt||b.createdAt||'').localeCompare(String(a.updatedAt||a.createdAt||'')));
+  if(!list.length){ wrap.innerHTML='<div class="archive-empty">مفيش بيانات جاية من العملاء دلوقتي.<br>أي عميل يبعت من صفحة «إدخال العميل» هتلاقيه هنا.</div>'; updateArchiveBadge(); return; }
+  wrap.innerHTML=list.map(r=>{
+    const s=r.state||{}; const nm=s.nameAr||s.nameEn||'بدون اسم';
+    const d=new Date(r.updatedAt||r.createdAt).toLocaleString('ar-EG',{dateStyle:'medium',timeStyle:'short'});
+    const cap=+s.capitalValue>0?('💰 '+Number(s.capitalValue).toLocaleString('en-US')+' ج'):'';
+    const tot=+s.quoteTotal>0?('عرض: '+Number(s.quoteTotal).toLocaleString('en-US')+' ج'):'';
+    const meta=[s.clientName?('👤 '+escapeHtml(s.clientName)):'',s.clientPhone?('📞 '+escapeHtml(s.clientPhone)):'',cap,tot,'🗓 '+d].filter(Boolean).join('<span style="opacity:.4"> • </span>');
+    const pur=s.foundingPurpose?('<div style="font-size:.74rem;opacity:.8;margin-top:4px;white-space:pre-line">🎯 '+escapeHtml(s.foundingPurpose)+'</div>'):'';
+    return '<div class="ap-card"><div class="ap-top"><div style="min-width:0"><div class="ap-name" style="white-space:normal;overflow:visible">'+escapeHtml(nm)+'<span class="ap-chips"><span class="ap-chip na">جديد من العميل</span></span></div><div class="ap-meta">'+meta+'</div>'+pur+'</div>'
+      +'<div style="display:flex;gap:4px;flex-shrink:0"><button class="archive-act" title="نقل للأرشيف وفتح للمراجعة" onclick="intakeOpen(\''+r.id+'\')">📥</button><button class="archive-act del" title="حذف" onclick="deleteFromArchive(\''+r.id+'\')">🗑️</button></div></div></div>';
+  }).join('');
+  updateArchiveBadge();
+}
+async function intakeOpen(id){
+  const rec=loadArchive().find(r=>r.id===id&&r.intake); if(!rec) return;
+  const key=phoneKey(rec.state&&rec.state.clientPhone);
+  if(!key){ alert('البيانات دي من غير رقم تليفون صالح — مش هينفع تدخل الأرشيف (الرقم هو اللي بيحدد النموذج). احذفيها أو اطلبي من العميل يبعت تاني.'); return; }
+  const ex=loadArchive().find(r=>!r.manual&&!r.intake&&phoneKey(r.state&&r.state.clientPhone)===key);
+  if(ex&&!confirm('في عرض محفوظ بنفس الرقم: «'+apName(ex)+'»'+(ex.approved?' (معتمد)':'')+'\nلو كملتي هيتحدّث ببيانات العميل الجديدة. تكمل؟')) return;
+  const st=JSON.parse(JSON.stringify(rec.state)); st.fromClient=true;
+  const r=await archiveUpsertByPhone(st); if(!r.ok) return;
+  const raw=loadArchiveRaw(); const i=raw.findIndex(x=>x.id===id);
+  if(i>=0){ const now=new Date().toISOString(); raw[i]={id:id,deleted:true,createdAt:raw[i].createdAt||now,updatedAt:now,deletedBy:getDeviceName()||'',state:{}}; persistArchive(raw); }
+  bgSync(); loadFromArchive(r.rec.id);
+}
 function apOpenStmt(id){ _apOpen[id]=true; openArchive(); archTab('app'); }
 
 /* tiny in-page form dialog (works the same in the browser and inside the APK) */
@@ -4526,7 +4562,7 @@ async function apApprove(id){
 }
 /* add an approved client directly (typed by hand); archived companies go through apApprove */
 function apAddNew(){
-  const cand=loadArchive().filter(r=>!r.approved&&!r.manual);
+  const cand=loadArchive().filter(r=>!r.approved&&!r.manual&&!r.intake);
   apDialog('➕ إضافة عرض معتمد',[
     {id:'src',label:'اختاري شركة من الأرشيف (هياخد إجمالي عرض السعر تلقائي)',type:'select',value:'',options:[['','— عميل جديد أكتب اسمه —']].concat(cand.map(r=>[r.id,apName(r)])),onchange:"apAddSrc()"},
     {id:'name',label:'اسم الشركة / العميل',value:''},
@@ -4932,7 +4968,7 @@ function deleteFromArchive(id){
   raw[i]={id:id,deleted:true,createdAt:raw[i].createdAt||now,updatedAt:now,deletedBy:getDeviceName()||'',state:{}};
   if(!persistArchive(raw)) return;
   if(getCurArchId()===id) setCurArchId('');
-  renderArchiveList(); try{ renderApproved(); }catch(e){}
+  renderArchiveList(); try{ renderApproved(); }catch(e){} try{ renderIntake(); }catch(e){}
   cloudPushCurrent();
 }
 
@@ -5565,7 +5601,7 @@ if(syncConfigured()) setTimeout(()=>syncNow({silent:true}), 400);
 </script>
 <script id="pwaUpdater">
 /* تحديث تلقائي لنسخة الموقع (الأيفون/PWA): بيقارن رقم الإصدار بالسيرفر وبيعرض زرار تحديث */
-const APP_BUILD='20261118231714';
+const APP_BUILD='20261119215714';
 function appUpdateNow(){
   const go=()=>{ try{ location.replace(location.pathname+'?v='+Date.now()); }catch(e){ location.reload(); } };
   Promise.resolve().then(()=>navigator.serviceWorker&&navigator.serviceWorker.getRegistrations?navigator.serviceWorker.getRegistrations():[])
